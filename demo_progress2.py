@@ -22,6 +22,10 @@ def garis(judul):
     print(f'{"─"*55}{RESET}')
 
 if __name__ == '__main__':
+    import sys
+    if hasattr(sys.stdout, 'reconfigure'):
+        sys.stdout.reconfigure(encoding='utf-8')
+
     print(f'\n{CYAN}  DEMO CORE FUNCTION — PROGRESS 2')
     print(f'  Kelompok 7 | Kriptografi Genap 2026 | ITERA{RESET}')
 
