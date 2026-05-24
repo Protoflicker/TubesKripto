@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>E-Health Cryptography Simulator</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: #0f1117;
+            color: #e2e8f0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #2d3148;
+            background-color: #1a1d27;
+        }
+        .panel:last-child { border-right: none; }
+        
+        .panel-header {
+            padding: 15px 20px;
+            font-size: 1.1em;
+            font-weight: bold;
+            border-bottom: 1px solid #2d3148;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header-left { background-color: #1e3a8a; color: #bfdbfe; }
+        .header-mid { background-color: #312e81; color: #c7d2fe; }
+        .header-right { background-color: #14532d; color: #bbf7d0; }
+
+        .panel-content {
+            padding: 20px;
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Left Panel */
+        textarea {
+            width: 100%;
+            height: 150px;
+            background-color: #0f1117;
+            border: 1px solid #2d3148;
+            color: #e2e8f0;
+            padding: 10px;
+            border-radius: 5px;
+            resize: none;
+            font-family: inherit;
+        }
+        .char-count { font-size: 0.85em; color: #94a3b8; text-align: right; margin-top: 5px; }
+        .btn-send {
+            width: 100%;
+            padding: 12px;
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 15px;
+            font-size: 1.1em;
+            transition: background-color 0.2s;
+        }
+        .btn-send:hover { background-color: #1d4ed8; }
+        .btn-send:disabled { background-color: #475569; cursor: not-allowed; }
+        
+        .divider {
+            margin: 25px 0 15px 0;
+            text-align: center;
+            border-bottom: 1px solid #2d3148;
+            line-height: 0.1em;
+        }
+        .divider span { background: #1a1d27; padding: 0 10px; color: #94a3b8; font-size: 0.9em; }
+        
+        .toggle-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            background: #2d3148;
+            padding: 12px;
+            border-radius: 5px;
+        }
+        .mitm-details {
+            background: #451a1a;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #7f1d1d;
+            display: none;
+            margin-bottom: 10px;
+        }
+        .mitm-details.active { display: block; }
+        .mitm-details input {
+            background: #0f1117;
+            border: 1px solid #7f1d1d;
+            color: white;
+            padding: 5px;
+            width: 70px;
+            border-radius: 3px;
+            margin-top: 5px;
+        }
+        .btn-reset {
+            background: #475569; border: none; color: white; padding: 5px 10px;
+            border-radius: 3px; cursor: pointer; font-size: 0.8em;
+        }
+        .btn-reset:hover { background: #334155; }
+        
+        /* Middle Panel */
+        .log-entry {
+            margin-bottom: 15px;
+            font-family: monospace;
+            font-size: 0.9em;
+            animation: fadeIn 0.3s ease-in;
+            line-height: 1.4;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: bold;
+            font-size: 0.85em;
+            margin-right: 8px;
+        }
+        .bg-sha3 { background: #7c3aed; color: white; }
+        .bg-aes-enc { background: #2563eb; color: white; }
+        .bg-aes-dec { background: #059669; color: white; }
+        .bg-packet { background: #475569; color: white; }
+        .bg-verify { background: #0891b2; color: white; }
+        .bg-attack { background: #dc2626; color: white; animation: blink 1s infinite; }
+        .bg-error { background: #991b1b; color: white; }
+        .bg-ok { background: #166534; color: white; }
+        @keyframes blink { 50% { opacity: 0.6; } }
+        
+        .log-title { color: #f8fafc; margin-bottom: 2px; }
+        .log-detail {
+            color: #94a3b8;
+            margin-left: 20px;
+            border-left: 1px solid #475569;
+            padding-left: 10px;
+            margin-top: 2px;
+        }
+        .stats-card {
+            background: #1e293b;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #334155;
+            margin-top: auto; /* push to bottom */
+            display: none;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            font-size: 0.85em;
+        }
+        .stat-item span { color: #94a3b8; display: block; margin-bottom: 4px; }
+        .stat-item strong { font-size: 1.2em; color: #f8fafc; }
+
+        /* Right Panel */
+        .status-placeholder {
+            color: #64748b;
+            text-align: center;
+            margin-top: 50px;
+        }
+        .result-card {
+            display: none;
+            padding: 25px;
+            border-radius: 8px;
+            animation: fadeIn 0.5s ease-in;
+        }
+        .result-card.success {
+            background-color: #064e3b;
+            border: 1px solid #047857;
+        }
+        .result-card.error {
+            background-color: #451a1a;
+            border: 1px solid #7f1d1d;
+        }
+        .result-title {
+            font-size: 1.6em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .result-msg {
+            background: #f8fafc;
+            color: #0f1117;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .result-badges {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+        .res-badge {
+            background: rgba(255,255,255,0.1);
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+        .res-badge.ok { color: #86efac; border: 1px solid #86efac; }
+        .res-badge.fail { color: #fca5a5; border: 1px solid #fca5a5; }
+        .detail-box {
+            font-size: 0.85em;
+            color: #cbd5e1;
+            background: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 5px;
+            word-break: break-all;
+        }
+        
+        /* Switch Toggle */
+        .switch {
+          position: relative;
+          display: inline-block;
+          width: 44px;
+          height: 22px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+          position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+          background-color: #475569; transition: .4s; border-radius: 22px;
+        }
+        .slider:before {
+          position: absolute; content: ""; height: 18px; width: 18px; left: 2px; bottom: 2px;
+          background-color: white; transition: .4s; border-radius: 50%;
+        }
+        input:checked + .slider { background-color: #ef4444; }
+        input:checked + .slider:before { transform: translateX(22px); }
+    </style>
+</head>
+<body>
+
+<!-- Panel Kiri -->
+<div class="panel">
+    <div class="panel-header header-left">
+        📤 Pengirim — Dokter
+        <button class="btn-reset" onclick="resetApp()">🔄 Reset</button>
+    </div>
+    <div class="panel-content">
+        <textarea id="msgInput" oninput="updateCharCount()">Pasien: Budi Santoso. Diagnosis: ISPA. Resep: Amoxicillin 500mg, 3x1, 5 hari.</textarea>
+        <div class="char-count" id="charCount">77 karakter</div>
+        
+        <button class="btn-send" id="btnSend" onclick="sendData()">🔐 ENKRIPSI & KIRIM</button>
+        
+        <div class="divider"><span>── Simulasi Serangan ──</span></div>
+        
+        <div class="toggle-group">
+            <label for="mitmToggle" style="font-weight: bold;">Aktifkan MITM Attack</label>
+            <label class="switch">
+                <input type="checkbox" id="mitmToggle" onchange="toggleMitm()">
+                <span class="slider"></span>
+            </label>
+        </div>
+        <div class="mitm-details" id="mitmDetails">
+            <div style="margin-bottom: 5px; font-size: 0.9em;">Posisi byte ciphertext yang dimanipulasi:</div>
+            <input type="number" id="mitmPos" value="30" min="0">
+            <div style="margin-top: 5px; font-size: 0.85em; color: #fca5a5;">Byte ke-<span id="lblPos">30</span> akan di-XOR dengan 0xFF saat transmisi</div>
+        </div>
+
+        <div class="toggle-group" style="margin-top: 15px;">
+            <label for="tamperToggle" style="font-weight: bold;">🔀 Tamper Hash (post-decrypt)</label>
+            <label class="switch">
+                <input type="checkbox" id="tamperToggle">
+                <span class="slider"></span>
+            </label>
+        </div>
+        <div style="font-size: 0.85em; color: #94a3b8;">Mensimulasikan gangguan atau manipulasi pada hash di tingkat aplikasi setelah dekripsi berhasil.</div>
+    </div>
+</div>
+
+<!-- Panel Tengah -->
+<div class="panel">
+    <div class="panel-header header-mid">
+        🔬 Activity Log — Proses Kriptografi
+    </div>
+    <div class="panel-content" id="logContainerParent" style="padding-bottom: 0;">
+        <div id="logContainer" style="flex: 1; overflow-y: auto; padding-bottom: 20px;">
+            <!-- Logs appear here -->
+        </div>
+    </div>
+    <div style="padding: 20px; padding-top: 0; background-color: #1a1d27;">
+        <div class="stats-card" id="statsCard">
+            <div class="stats-grid">
+                <div class="stat-item"><span>Panjang Plaintext</span><strong id="stPlain">0 byte</strong></div>
+                <div class="stat-item"><span>Ukuran Paket</span><strong id="stPack">0 byte</strong></div>
+                <div class="stat-item"><span>Waktu Proses</span><strong id="stTime">0 ms</strong></div>
+                <div class="stat-item"><span>Status Akhir</span><strong id="stStatus">-</strong></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Panel Kanan -->
+<div class="panel">
+    <div class="panel-header header-right">
+        📥 Penerima — Pasien
+    </div>
+    <div class="panel-content" id="receiverContainer">
+        <div class="status-placeholder" id="placeholderMsg">
+            Menunggu pesan dari dokter...
+        </div>
+        
+        <!-- Success Card -->
+        <div class="result-card success" id="cardSuccess">
+            <div class="result-title">✅ PESAN DITERIMA</div>
+            <div class="result-msg" id="resMsgText">...</div>
+            <div class="result-badges">
+                <div class="res-badge ok">Auth Tag ✓</div>
+                <div class="res-badge ok">SHA-3-256 ✓</div>
+                <div class="res-badge ok">Integritas ✓</div>
+            </div>
+            <div class="detail-box">
+                <strong style="color: #bbf7d0;">SHA-3-256 Digest Diverifikasi:</strong><br>
+                <span id="resDigest" style="font-family: monospace;"></span>
+            </div>
+        </div>
+
+        <!-- Error Card -->
+        <div class="result-card error" id="cardError">
+            <div class="result-title">❌ PESAN DITOLAK</div>
+            <div style="margin-bottom: 20px; text-align: center; color: #fca5a5; font-size: 1.1em;" id="errReason">
+                Auth Tag tidak cocok — kemungkinan serangan Man-in-the-Middle
+            </div>
+            <div class="result-badges">
+                <div class="res-badge fail" id="errBadge1">Auth Tag ✗</div>
+                <div class="res-badge fail" id="errBadge2">Integritas Gagal</div>
+            </div>
+            <div class="detail-box" style="background: rgba(220,38,38,0.2);">
+                <strong style="color: #fca5a5; font-size: 1.1em;">MITM / TAMPER DETECTED</strong><br>
+                <div id="errDetail" style="margin-top: 8px;">Modifikasi terdeteksi pada transmisi paket.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function updateCharCount() {
+        const text = document.getElementById('msgInput').value;
+        document.getElementById('charCount').textContent = text.length + " karakter";
+    }
+
+    function toggleMitm() {
+        const isChecked = document.getElementById('mitmToggle').checked;
+        document.getElementById('mitmDetails').classList.toggle('active', isChecked);
+    }
+    
+    document.getElementById('mitmPos').addEventListener('input', function(e) {
+        document.getElementById('lblPos').textContent = e.target.value;
+    });
+
+    function resetApp() {
+        document.getElementById('logContainer').innerHTML = '';
+        document.getElementById('statsCard').style.display = 'none';
+        document.getElementById('placeholderMsg').style.display = 'block';
+        document.getElementById('cardSuccess').style.display = 'none';
+        document.getElementById('cardError').style.display = 'none';
+        document.getElementById('btnSend').disabled = false;
+    }
+
+    function getBadgeClass(type) {
+        const map = {
+            'SHA3': 'bg-sha3',
+            'AES-ENC': 'bg-aes-enc',
+            'AES-DEC': 'bg-aes-dec',
+            'PACKET': 'bg-packet',
+            'VERIFY': 'bg-verify',
+            'ATTACK': 'bg-attack',
+            'ERROR': 'bg-error',
+            'OK': 'bg-ok'
+        };
+        return map[type] || 'bg-packet';
+    }
+
+    async function sendData() {
+        resetApp();
+        document.getElementById('btnSend').disabled = true;
+        
+        const payload = {
+            message: document.getElementById('msgInput').value,
+            mitm_enabled: document.getElementById('mitmToggle').checked,
+            mitm_byte_pos: parseInt(document.getElementById('mitmPos').value) || 0,
+            tamper_hash: document.getElementById('tamperToggle').checked
+        };
+
+        try {
+            const response = await fetch('/process', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await response.json();
+            
+            let currentDelay = 0;
+            const logContainer = document.getElementById('logContainer');
+            const parentContainer = document.getElementById('logContainerParent');
+            
+            for (const step of data.steps) {
+                currentDelay += step.delay_ms;
+                setTimeout(() => {
+                    const entry = document.createElement('div');
+                    entry.className = 'log-entry';
+                    
+                    const timeStr = new Date().toISOString().split('T')[1].substring(0,12);
+                    
+                    let detailsHTML = '';
+                    if (step.detail) {
+                        for (const [k, v] of Object.entries(step.detail)) {
+                            detailsHTML += `└─ ${k}: ${v}<br>`;
+                        }
+                    }
+                    
+                    entry.innerHTML = `
+                        <div class="log-title">
+                            <span style="color: #64748b;">[${timeStr}]</span> 
+                            <span class="badge ${getBadgeClass(step.type)}">${step.type}</span>
+                            ${step.title}
+                        </div>
+                        <div class="log-detail">${detailsHTML}</div>
+                    `;
+                    logContainer.appendChild(entry);
+                    logContainer.scrollTop = logContainer.scrollHeight;
+                }, currentDelay);
+            }
+            
+            setTimeout(() => {
+                showResult(data.result);
+                document.getElementById('btnSend').disabled = false;
+            }, currentDelay + 400);
+            
+        } catch (err) {
+            alert('Error: ' + err.message);
+            document.getElementById('btnSend').disabled = false;
+        }
+    }
+
+    function showResult(result) {
+        document.getElementById('statsCard').style.display = 'block';
+        document.getElementById('stPlain').textContent = result.plaintext_length + " byte";
+        document.getElementById('stPack').textContent = result.packet_size + " byte";
+        document.getElementById('stTime').textContent = result.processing_time_ms + " ms";
+        
+        document.getElementById('placeholderMsg').style.display = 'none';
+        
+        if (result.is_valid) {
+            document.getElementById('stStatus').textContent = "Sukses";
+            document.getElementById('stStatus').style.color = "#86efac";
+            
+            document.getElementById('cardSuccess').style.display = 'block';
+            document.getElementById('resMsgText').textContent = result.message;
+            document.getElementById('resDigest').textContent = result.digest;
+        } else {
+            document.getElementById('stStatus').textContent = "Gagal / Ditolak";
+            document.getElementById('stStatus').style.color = "#fca5a5";
+            
+            document.getElementById('cardError').style.display = 'block';
+            
+            if (result.error === "MAC check failed") {
+                document.getElementById('errReason').textContent = "Auth Tag tidak cocok — kemungkinan serangan Man-in-the-Middle";
+                document.getElementById('errBadge1').textContent = "Auth Tag ✗";
+                document.getElementById('errBadge2').textContent = "Integritas Gagal";
+                document.getElementById('errDetail').innerHTML = `Modifikasi terdeteksi pada paket ciphertext.<br>Auth Tag yang diterima tidak cocok dengan data terenkripsi.`;
+            } else if (result.error === "Hash tidak cocok") {
+                document.getElementById('errReason').textContent = "Hash tidak cocok — Integritas konten gagal diverifikasi";
+                document.getElementById('errBadge1').textContent = "Auth Tag ✓";
+                document.getElementById('errBadge1').className = "res-badge ok";
+                document.getElementById('errBadge2').textContent = "SHA-3 ✗";
+                document.getElementById('errDetail').innerHTML = `Pesan berhasil di-dekripsi (Auth Tag valid), tetapi Hash SHA-3 yang diterima tidak sesuai dengan hash dari pesan plaintext.<br>Kemungkinan data (Hash) dimanipulasi setelah dekripsi (serangan storage/sistem).`;
+            }
+        }
+    }
+    
+    // Init char count on load
+    updateCharCount();
+</script>
+
+</body>
+</html>
