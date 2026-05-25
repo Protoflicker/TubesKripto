@@ -7,495 +7,13 @@
   <title>E-Health Crypto Simulator — Kelompok 7</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <style>
-    /* ── DESIGN TOKENS ────────────────────────────────── */
-    :root {
-      --primary:      #1a5276;
-      --primary-light:#2e86c1;
-      --primary-dim:  #154360;
-      --success:      #1e8449;
-      --success-bg:   #eafaf1;
-      --danger:       #c0392b;
-      --danger-bg:    #fdedec;
-      --warning:      #d68910;
-      --warning-bg:   #fef9e7;
-      --bg:           #f0f4f8;
-      --card:         #ffffff;
-      --border:       #d5dde6;
-      --text:         #1a252f;
-      --text-muted:   #566573;
-      --text-subtle:  #7f8c8d;
-
-      /* step type colors */
-      --sha3:         #1565c0;
-      --sha3-bg:      #e3f2fd;
-      --aes-enc:      #2e7d32;
-      --aes-enc-bg:   #e8f5e9;
-      --aes-dec:      #00695c;
-      --aes-dec-bg:   #e0f2f1;
-      --packet:       #6a1b9a;
-      --packet-bg:    #f3e5f5;
-      --attack:       #bf360c;
-      --attack-bg:    #fbe9e7;
-      --verify:       #283593;
-      --verify-bg:    #e8eaf6;
-      --ok:           #1b5e20;
-      --ok-bg:        #e8f5e9;
-      --error:        #b71c1c;
-      --error-bg:     #ffebee;
-
-      --radius:       10px;
-      --radius-lg:    16px;
-      --shadow:       0 2px 8px rgba(0,0,0,.08);
-      --shadow-md:    0 4px 20px rgba(0,0,0,.12);
-      --transition:   200ms ease;
-      --font:         'Inter', system-ui, sans-serif;
-      --font-mono:    'JetBrains Mono', monospace;
-    }
-
-    /* ── RESET ────────────────────────────────────────── */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
-    body {
-      font-family: var(--font);
-      background: var(--bg);
-      color: var(--text);
-      font-size: 15px;
-      line-height: 1.6;
-      min-height: 100vh;
-    }
-
-    /* ── TOP HEADER ───────────────────────────────────── */
-    .app-header {
-      background: linear-gradient(135deg, var(--primary-dim) 0%, var(--primary) 60%, var(--primary-light) 100%);
-      color: #fff;
-      padding: 0 24px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      height: 60px;
-      box-shadow: 0 2px 12px rgba(26,82,118,.35);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-    .header-brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .header-brand svg { width: 28px; height: 28px; flex-shrink: 0; }
-    .brand-title { font-size: 1rem; font-weight: 700; letter-spacing: .3px; }
-    .brand-sub   { font-size: .72rem; opacity: .75; letter-spacing: .4px; }
-    .header-badge {
-      background: rgba(255,255,255,.18);
-      border: 1px solid rgba(255,255,255,.3);
-      border-radius: 20px;
-      padding: 4px 14px;
-      font-size: .75rem;
-      font-weight: 600;
-      letter-spacing: .5px;
-    }
-
-    /* ── TAB NAV ──────────────────────────────────────── */
-    .tab-nav {
-      background: var(--card);
-      border-bottom: 2px solid var(--border);
-      padding: 0 24px;
-      display: flex;
-      gap: 4px;
-      box-shadow: var(--shadow);
-    }
-    .tab-btn {
-      padding: 14px 20px;
-      border: none;
-      background: transparent;
-      cursor: pointer;
-      font-family: var(--font);
-      font-size: .88rem;
-      font-weight: 500;
-      color: var(--text-muted);
-      border-bottom: 3px solid transparent;
-      margin-bottom: -2px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      transition: color var(--transition), border-color var(--transition);
-      white-space: nowrap;
-    }
-    .tab-btn:hover  { color: var(--primary); }
-    .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; }
-    .tab-btn svg    { width: 18px; height: 18px; }
-
-    /* ── MAIN LAYOUT ──────────────────────────────────── */
-    .app-main { max-width: 1280px; margin: 0 auto; padding: 28px 24px 60px; }
-
-    /* ── TAB PANELS ───────────────────────────────────── */
-    .tab-panel         { display: none; }
-    .tab-panel.active  { display: block; }
-
-    /* ── RESPONSIVE ───────────────────────────────────── */
-    @media (max-width: 768px) {
-      .app-header { height: auto; padding: 12px 16px; flex-wrap: wrap; gap: 8px; }
-      .tab-btn    { padding: 12px 12px; font-size: .8rem; }
-      .app-main   { padding: 20px 16px 48px; }
-    }
-    @media (max-width: 480px) {
-      .tab-btn span { display: none; }
-    }
-
-    /* ── REDUCED MOTION ───────────────────────────────── */
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
-    }
-
-    /* ── DEMO TAB LAYOUT ─────────────────────────────── */
-    .demo-grid {
-      display: grid;
-      grid-template-columns: 340px 1fr;
-      gap: 24px;
-      align-items: start;
-    }
-    @media (max-width: 900px) { .demo-grid { grid-template-columns: 1fr; } }
-
-    /* ── CARDS ────────────────────────────────────────── */
-    .card {
-      background: var(--card);
-      border-radius: var(--radius-lg);
-      border: 1px solid var(--border);
-      box-shadow: var(--shadow);
-      overflow: hidden;
-    }
-    .card-header {
-      padding: 16px 20px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      background: linear-gradient(135deg,#f8fbff,#eef4fb);
-    }
-    .card-header h2 {
-      font-size: .92rem;
-      font-weight: 600;
-      color: var(--primary);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .card-header svg { width:18px; height:18px; flex-shrink:0; }
-    .card-body { padding: 20px; }
-
-    /* ── FORM ELEMENTS ────────────────────────────────── */
-    label.field-label {
-      display: block;
-      font-size: .8rem;
-      font-weight: 600;
-      color: var(--text-muted);
-      margin-bottom: 6px;
-      text-transform: uppercase;
-      letter-spacing: .5px;
-    }
-    textarea#msgInput {
-      width: 100%;
-      height: 120px;
-      padding: 12px;
-      border: 1.5px solid var(--border);
-      border-radius: var(--radius);
-      font-family: var(--font);
-      font-size: .9rem;
-      color: var(--text);
-      background: #fafcff;
-      resize: vertical;
-      transition: border-color var(--transition), box-shadow var(--transition);
-      line-height: 1.5;
-    }
-    textarea#msgInput:focus {
-      outline: none;
-      border-color: var(--primary-light);
-      box-shadow: 0 0 0 3px rgba(46,134,193,.15);
-    }
-    .char-count { font-size: .78rem; color: var(--text-subtle); text-align: right; margin-top: 4px; }
-
-    /* ── TOGGLE SWITCH ────────────────────────────────── */
-    .toggle-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 14px;
-      background: #f8fafc;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      margin-bottom: 8px;
-    }
-    .toggle-label {
-      font-size: .88rem;
-      font-weight: 500;
-      color: var(--text);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .toggle-label svg { width:16px; height:16px; color: var(--text-muted); }
-    .switch { position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink:0; }
-    .switch input { opacity: 0; width: 0; height: 0; }
-    .switch-slider {
-      position: absolute; inset: 0; background: #cbd5e1;
-      border-radius: 24px; cursor: pointer;
-      transition: background var(--transition);
-    }
-    .switch-slider::before {
-      content: ''; position: absolute;
-      width: 18px; height: 18px; left: 3px; top: 3px;
-      background: #fff; border-radius: 50%;
-      transition: transform var(--transition);
-      box-shadow: 0 1px 4px rgba(0,0,0,.2);
-    }
-    .switch input:checked + .switch-slider { background: var(--danger); }
-    .switch input:checked + .switch-slider::before { transform: translateX(20px); }
-    .switch input:focus-visible + .switch-slider { outline: 3px solid var(--primary-light); outline-offset: 2px; }
-
-    /* ── ATTACK DETAILS ───────────────────────────────── */
-    .attack-panel {
-      background: var(--danger-bg);
-      border: 1px solid #f5b7b1;
-      border-radius: var(--radius);
-      padding: 14px;
-      margin: 6px 0 10px;
-      display: none;
-    }
-    .attack-panel.open { display: block; }
-    .attack-panel .ap-label { font-size:.8rem; font-weight:600; color: var(--danger); margin-bottom:6px; }
-    .slider-row { display:flex; align-items:center; gap:12px; }
-    input[type=range] {
-      flex:1; accent-color: var(--danger);
-      height: 4px; cursor: pointer;
-    }
-    .slider-val {
-      background: var(--danger); color:#fff;
-      padding: 2px 10px; border-radius: 20px;
-      font-size: .8rem; font-weight:600; min-width: 36px; text-align:center;
-    }
-
-    /* ── BUTTONS ──────────────────────────────────────── */
-    .btn { display:inline-flex; align-items:center; gap:7px; border:none; border-radius:var(--radius); cursor:pointer; font-family:var(--font); font-weight:600; transition: all var(--transition); }
-    .btn svg { width:18px; height:18px; flex-shrink:0; }
-    .btn-primary {
-      width:100%; justify-content:center;
-      padding: 13px 20px; font-size:.95rem;
-      background: linear-gradient(135deg, var(--primary), var(--primary-light));
-      color: #fff; box-shadow: 0 4px 14px rgba(26,82,118,.35);
-    }
-    .btn-primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(26,82,118,.4); }
-    .btn-primary:disabled { opacity:.55; cursor:not-allowed; transform:none; }
-    .btn-secondary {
-      padding: 8px 14px; font-size:.82rem;
-      background: var(--bg); color: var(--primary);
-      border: 1.5px solid var(--primary-light);
-    }
-    .btn-secondary:hover { background: var(--primary); color:#fff; }
-    .btn-danger-sm {
-      padding: 7px 12px; font-size:.8rem;
-      background: #fff; color: var(--danger);
-      border: 1.5px solid var(--danger);
-    }
-    .btn-danger-sm:hover { background: var(--danger); color:#fff; }
-    .mt-12 { margin-top:12px; }
-
-    /* ── KEY PREVIEW ──────────────────────────────────── */
-    .key-row {
-      display:flex; align-items:center; justify-content:space-between;
-      gap:10px; padding:10px 12px;
-      background:#f0f4f8; border:1px solid var(--border); border-radius:var(--radius);
-      margin-top:14px;
-    }
-    .key-val { font-family:var(--font-mono); font-size:.72rem; color:var(--text-muted); word-break:break-all; }
-
-    /* ── STEP VISUALIZATION PANEL ─────────────────────── */
-    .steps-panel { display:flex; flex-direction:column; gap:16px; }
-    .steps-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:4px; }
-    .steps-header h2 { font-size:.92rem; font-weight:600; color:var(--primary); display:flex; align-items:center; gap:8px; }
-    .steps-header h2 svg { width:18px; height:18px; }
-
-    #stepList { display:flex; flex-direction:column; gap:8px; min-height:180px; }
-    .step-placeholder {
-      display:flex; flex-direction:column; align-items:center; justify-content:center;
-      height:200px; color:var(--text-subtle); gap:10px;
-    }
-    .step-placeholder svg { width:40px; height:40px; opacity:.3; }
-
-    .step-item {
-      border-radius: var(--radius);
-      border-left: 4px solid;
-      padding: 10px 14px;
-      animation: slideIn .25s ease-out both;
-    }
-    @keyframes slideIn {
-      from { opacity:0; transform:translateX(-10px); }
-      to   { opacity:1; transform:translateX(0); }
-    }
-    .step-item.SHA3    { border-color:var(--sha3);    background:var(--sha3-bg); }
-    .step-item.AES-ENC { border-color:var(--aes-enc); background:var(--aes-enc-bg); }
-    .step-item.AES-DEC { border-color:var(--aes-dec); background:var(--aes-dec-bg); }
-    .step-item.PACKET  { border-color:var(--packet);  background:var(--packet-bg); }
-    .step-item.ATTACK  { border-color:var(--attack);  background:var(--attack-bg); animation: slideIn .25s ease-out both, pulse-attack 1.2s ease-in-out 3; }
-    .step-item.VERIFY  { border-color:var(--verify);  background:var(--verify-bg); }
-    .step-item.OK      { border-color:var(--ok);      background:var(--ok-bg); }
-    .step-item.ERROR   { border-color:var(--error);   background:var(--error-bg); }
-    @keyframes pulse-attack {
-      0%,100% { box-shadow: none; }
-      50%      { box-shadow: 0 0 0 4px rgba(192,57,43,.25); }
-    }
-
-    .step-badge {
-      display:inline-block; padding:2px 8px; border-radius:4px;
-      font-size:.72rem; font-weight:700; letter-spacing:.5px;
-      margin-bottom:4px; color:#fff;
-    }
-    .step-badge.SHA3    { background:var(--sha3); }
-    .step-badge.AES-ENC { background:var(--aes-enc); }
-    .step-badge.AES-DEC { background:var(--aes-dec); }
-    .step-badge.PACKET  { background:var(--packet); }
-    .step-badge.ATTACK  { background:var(--attack); }
-    .step-badge.VERIFY  { background:var(--verify); }
-    .step-badge.OK      { background:var(--ok); }
-    .step-badge.ERROR   { background:var(--error); }
-
-    .step-title { font-size:.88rem; font-weight:600; color:var(--text); margin-bottom:4px; }
-    .step-details { font-family:var(--font-mono); font-size:.74rem; color:var(--text-muted); line-height:1.7; }
-    .step-details span { display:block; }
-    .step-key { color:var(--text-subtle); margin-right:4px; }
-
-    /* ── RESULT CARD ──────────────────────────────────── */
-    .result-banner {
-      border-radius:var(--radius-lg); padding:22px 24px;
-      animation: fadeUp .4s ease-out both;
-      display:none;
-    }
-    @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
-    .result-banner.success { background:var(--success-bg); border:2px solid var(--success); }
-    .result-banner.error   { background:var(--danger-bg);  border:2px solid var(--danger); }
-    .result-banner h3 { font-size:1.2rem; font-weight:700; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
-    .result-banner.success h3 { color:var(--success); }
-    .result-banner.error   h3 { color:var(--danger); }
-    .result-msg-box {
-      background:#fff; border-radius:var(--radius); padding:12px 14px;
-      font-family:var(--font-mono); font-size:.85rem; color:var(--text);
-      border:1px solid var(--border); margin-bottom:14px; white-space:pre-wrap; word-break:break-word;
-    }
-    .result-meta { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
-    .meta-item { background:#fff; border-radius:var(--radius); padding:10px 12px; border:1px solid var(--border); }
-    .meta-label { font-size:.72rem; font-weight:600; text-transform:uppercase; letter-spacing:.5px; color:var(--text-subtle); margin-bottom:3px; }
-    .meta-val   { font-family:var(--font-mono); font-size:.82rem; color:var(--text); word-break:break-all; }
-    .result-badges { display:flex; flex-wrap:wrap; gap:8px; }
-    .rbadge { padding:5px 12px; border-radius:20px; font-size:.78rem; font-weight:600; border:1.5px solid; }
-    .rbadge.ok   { color:var(--success); border-color:var(--success); background:var(--success-bg); }
-    .rbadge.fail { color:var(--danger);  border-color:var(--danger);  background:var(--danger-bg); }
-
-    /* ── TEST CARDS (Tab 2 & 3) ─────────────────────────── */
-    .section-title {
-      font-size:1.05rem; font-weight:700; color:var(--primary);
-      margin-bottom:20px; display:flex; align-items:center; gap:10px;
-    }
-    .section-title svg { width:20px; height:20px; }
-    .tests-grid {
-      display:grid;
-      grid-template-columns: repeat(2,1fr);
-      gap:20px;
-    }
-    @media(max-width:768px){ .tests-grid { grid-template-columns:1fr; } }
-
-    .test-card {
-      background:var(--card); border-radius:var(--radius-lg);
-      border:1px solid var(--border); box-shadow:var(--shadow);
-      overflow:hidden; display:flex; flex-direction:column;
-    }
-    .test-card-header {
-      padding:14px 18px; display:flex; align-items:center; justify-content:space-between;
-      border-bottom:1px solid var(--border);
-    }
-    .test-card-header h3 { font-size:.9rem; font-weight:700; color:var(--primary); display:flex; align-items:center; gap:8px; }
-    .test-card-header h3 svg { width:17px; height:17px; }
-    .test-badge { font-size:.7rem; font-weight:600; padding:3px 10px; border-radius:20px; }
-    .test-badge.sha3  { background:var(--sha3-bg);    color:var(--sha3); }
-    .test-badge.aes   { background:var(--aes-enc-bg); color:var(--aes-enc); }
-    .test-badge.hash  { background:var(--packet-bg);  color:var(--packet); }
-    .test-badge.perf  { background:var(--verify-bg);  color:var(--verify); }
-
-    .test-card-body { padding:16px 18px; flex:1; }
-    .test-input-row { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
-    .test-input-row label { font-size:.8rem; font-weight:600; color:var(--text-muted); white-space:nowrap; }
-    .test-input-row input[type=number] {
-      width:90px; padding:7px 10px; border:1.5px solid var(--border);
-      border-radius:var(--radius); font-family:var(--font); font-size:.88rem;
-      color:var(--text); background:#fafcff;
-      transition: border-color var(--transition);
-    }
-    .test-input-row input[type=number]:focus { outline:none; border-color:var(--primary-light); box-shadow:0 0 0 3px rgba(46,134,193,.12); }
-    .btn-test {
-      display:inline-flex; align-items:center; gap:6px;
-      padding:8px 16px; font-size:.84rem; font-weight:600;
-      border:none; border-radius:var(--radius); cursor:pointer;
-      font-family:var(--font); color:#fff;
-      background:linear-gradient(135deg,var(--primary),var(--primary-light));
-      transition: all var(--transition);
-    }
-    .btn-test:hover:not(:disabled) { transform:translateY(-1px); box-shadow:0 4px 14px rgba(26,82,118,.3); }
-    .btn-test:disabled { opacity:.55; cursor:not-allowed; transform:none; }
-    .btn-test svg { width:15px; height:15px; }
-
-    /* spinner */
-    .spinner {
-      width:14px; height:14px; border:2px solid rgba(255,255,255,.3);
-      border-top-color:#fff; border-radius:50%;
-      animation: spin .7s linear infinite; display:none;
-    }
-    .spinner.active { display:block; }
-    @keyframes spin { to { transform:rotate(360deg); } }
-
-    /* test result area */
-    .test-result { margin-top:14px; display:none; }
-    .test-result.visible { display:block; }
-    .test-result-header {
-      display:flex; align-items:center; justify-content:space-between;
-      margin-bottom:10px;
-    }
-    .test-status-badge {
-      padding:4px 12px; border-radius:20px; font-size:.76rem; font-weight:700;
-    }
-    .test-status-badge.pass { background:var(--success-bg); color:var(--success); border:1px solid var(--success); }
-    .test-status-badge.fail { background:var(--danger-bg);  color:var(--danger);  border:1px solid var(--danger); }
-    .test-status-badge.info { background:var(--sha3-bg);    color:var(--sha3);    border:1px solid var(--sha3); }
-
-    .test-stats {
-      display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:10px;
-    }
-    .test-stat { background:#f8fafc; border:1px solid var(--border); border-radius:var(--radius); padding:8px 10px; text-align:center; }
-    .test-stat .ts-label { font-size:.68rem; text-transform:uppercase; letter-spacing:.4px; color:var(--text-subtle); margin-bottom:2px; }
-    .test-stat .ts-val   { font-size:.95rem; font-weight:700; color:var(--text); font-family:var(--font-mono); }
-
-    /* histogram bars */
-    .histogram { display:flex; align-items:flex-end; gap:2px; height:60px; margin-bottom:8px; }
-    .hbar { flex:1; background:var(--primary-light); border-radius:3px 3px 0 0; min-width:6px;
-            transition:height .3s ease; opacity:.8; }
-
-    /* data table */
-    .data-table { width:100%; border-collapse:collapse; font-size:.8rem; }
-    .data-table th { background:var(--primary); color:#fff; padding:7px 10px; text-align:left; font-weight:600; }
-    .data-table td { padding:7px 10px; border-bottom:1px solid var(--border); color:var(--text); }
-    .data-table tr:last-child td { border-bottom:none; }
-    .data-table tr:nth-child(even) td { background:#f8fafc; }
-    .pass-pill { display:inline-block; padding:2px 8px; border-radius:10px; font-size:.72rem; font-weight:700; }
-    .pass-pill.ok   { background:var(--success-bg); color:var(--success); }
-    .pass-pill.fail { background:var(--danger-bg);  color:var(--danger); }
-  </style>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
 
 <!-- TOP HEADER -->
 <header class="app-header">
   <div class="header-brand">
-    <!-- Shield + cross icon (healthcare + security) -->
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <path d="M12 2L4 6v6c0 5.25 3.5 10.15 8 11.5C16.5 22.15 20 17.25 20 12V6L12 2z"/>
       <line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
@@ -510,15 +28,15 @@
 
 <!-- TAB NAVIGATION -->
 <nav class="tab-nav" role="tablist" aria-label="Menu Utama">
-  <button class="tab-btn active" role="tab" aria-selected="true"  aria-controls="tab-demo"        id="btn-demo"        onclick="switchTab('demo')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+  <button class="tab-btn active" role="tab" aria-selected="true" aria-controls="tab-demo" id="btn-demo" onclick="switchTab('demo')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
     <span>Demo Enkripsi</span>
   </button>
-  <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-tests"       id="btn-tests"       onclick="switchTab('tests')">
+  <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-tests" id="btn-tests" onclick="switchTab('tests')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v11m0 0H5a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h4m0-6h6m0 0h4a2 2 0 0 0 2-2v-4M15 14v7"/></svg>
     <span>Pengujian Keamanan</span>
   </button>
-  <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-throughput"  id="btn-throughput"  onclick="switchTab('throughput')">
+  <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-throughput" id="btn-throughput" onclick="switchTab('throughput')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
     <span>Throughput SHA-3</span>
   </button>
@@ -526,148 +44,140 @@
 
 <!-- MAIN CONTENT AREA -->
 <main class="app-main">
+
+  <!-- ───────── TAB 1: DEMO (CHAT) ───────── -->
   <div id="tab-demo" class="tab-panel active" role="tabpanel" aria-labelledby="btn-demo">
     <div class="demo-grid">
 
-      <!-- LEFT: FORM CARD -->
-      <div>
+      <!-- DOCTOR CHAT (LEFT) -->
+      <section class="chat-panel doctor-panel" aria-label="Chat Dokter">
+        <header class="chat-header doctor">
+          <div class="chat-avatar doctor">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 14V6a2 2 0 0 0-2-2h-3l-2-2h-2L8 4H5a2 2 0 0 0-2 2v8"/><path d="M12 12v6"/><path d="M9 15h6"/><circle cx="12" cy="22" r="0"/></svg>
+          </div>
+          <div class="chat-title">dr. Anda <small>Pengirim resep</small></div>
+          <span class="chat-status"><span class="status-dot"></span>ONLINE</span>
+        </header>
+        <div class="chat-body" id="chatDoctor"></div>
+        <footer class="chat-footer">
+          <button class="chat-icon-btn" id="btnDoctorAttach" onclick="openAttachModal()" title="Lampirkan Resep" aria-label="Lampirkan Resep">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66L9.41 17.41a2 2 0 0 1-2.83-2.83l8.49-8.49"/></svg>
+          </button>
+          <textarea class="chat-input" id="doctorInput" rows="1" placeholder="Ketik pesan untuk pasien... (Enter untuk kirim)"></textarea>
+          <button class="chat-icon-btn chat-send" id="btnDoctorSend" onclick="onDoctorSend()" title="Kirim" aria-label="Kirim">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </footer>
+      </section>
+
+      <!-- PATIENT CHAT (CENTER) -->
+      <section class="chat-panel patient-panel" aria-label="Chat Pasien">
+        <header class="chat-header patient">
+          <div class="chat-avatar patient">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          <div class="chat-title">Pasien Anda <small>Penerima resep</small></div>
+          <span class="chat-status"><span class="status-dot"></span>ONLINE</span>
+        </header>
+        <div class="chat-body" id="chatPatient"></div>
+        <footer class="chat-footer">
+          <textarea class="chat-input" id="patientInput" rows="1" placeholder="Balas dokter... (Enter untuk kirim)"></textarea>
+          <button class="chat-icon-btn chat-send" id="btnPatientSend" onclick="onPatientSend()" title="Kirim" aria-label="Kirim">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </footer>
+      </section>
+
+      <!-- SIDEBAR: CONTROLS -->
+      <aside class="demo-sidebar">
+        <!-- Server key -->
+        <div class="card sidebar-section">
+          <span class="field-label">Server AES-256 Key</span>
+          <div class="key-display" title="Hanya 5 karakter terakhir yang ditampilkan">
+            <span class="key-dots">••••••••••••••••</span>
+            <span class="key-last5" id="keyLast5">?????</span>
+          </div>
+          <button class="btn btn-danger-sm" onclick="resetKey()" style="width:100%; justify-content:center;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            Reset Key
+          </button>
+        </div>
+
+        <!-- Attack controls -->
+        <div class="card sidebar-section">
+          <span class="field-label" style="margin-bottom:10px">Simulasi Serangan</span>
+
+          <div class="toggle-row">
+            <span class="toggle-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              MITM Attack
+            </span>
+            <label class="switch" aria-label="Aktifkan MITM Attack">
+              <input type="checkbox" id="mitmToggle" onchange="onMitmToggle()">
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+          <div class="attack-panel" id="mitmPanel">
+            <div class="ap-label">Posisi byte ciphertext (XOR 0xFF):</div>
+            <div class="slider-row">
+              <input type="range" id="mitmSlider" min="0" max="200" value="30">
+              <div class="slider-val" id="mitmSliderVal">30</div>
+            </div>
+          </div>
+
+          <div class="toggle-row">
+            <span class="toggle-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg>
+              Tamper Hash
+            </span>
+            <label class="switch" aria-label="Aktifkan Tamper Hash">
+              <input type="checkbox" id="tamperToggle">
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+          <div class="attack-hint">Manipulasi hash di tingkat aplikasi setelah dekripsi berhasil.</div>
+        </div>
+
+        <!-- Clear chat -->
+        <div class="card sidebar-section">
+          <button class="btn btn-secondary" onclick="clearChat()" style="width:100%; justify-content:center;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+            Bersihkan Chat &amp; Log
+          </button>
+        </div>
+      </aside>
+
+      <!-- ACTIVITY LOG (full width below chats) -->
+      <div class="activity-log" style="grid-column: 1 / -1;">
         <div class="card">
           <div class="card-header">
             <h2>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 1 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-              Pesan Medis
-            </h2>
-          </div>
-          <div class="card-body">
-            <label class="field-label" for="msgInput">Isi Pesan</label>
-            <textarea id="msgInput" oninput="updateCharCount()" aria-describedby="charCount">Pasien: Budi Santoso. Diagnosis: ISPA. Resep: Amoxicillin 500mg, 3x1, 5 hari.</textarea>
-            <div class="char-count" id="charCount">77 karakter</div>
-
-            <button class="btn btn-primary mt-12" id="btnSend" onclick="sendData()">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-              Kirim &amp; Enkripsi
-            </button>
-
-            <!-- Key Preview -->
-            <div class="key-row">
-              <div>
-                <div class="meta-label">Server AES-256 Key</div>
-                <div class="key-val" id="keyPreview">••••••••••••••••••••••••••••••••</div>
-              </div>
-              <button class="btn btn-danger-sm" onclick="resetKey()" title="Reset server key">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-                Reset Key
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- ATTACK CONTROLS -->
-        <div class="card" style="margin-top:16px">
-          <div class="card-header">
-            <h2>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-              Simulasi Serangan
-            </h2>
-          </div>
-          <div class="card-body">
-            <!-- MITM Toggle -->
-            <div class="toggle-row">
-              <span class="toggle-label">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                MITM Attack
-              </span>
-              <label class="switch" aria-label="Aktifkan MITM Attack">
-                <input type="checkbox" id="mitmToggle" onchange="onMitmToggle()">
-                <span class="switch-slider"></span>
-              </label>
-            </div>
-            <div class="attack-panel" id="mitmPanel">
-              <div class="ap-label">Posisi byte ciphertext (di-XOR 0xFF):</div>
-              <div class="slider-row">
-                <input type="range" id="mitmSlider" min="0" max="200" value="30" oninput="document.getElementById('mitmSliderVal').textContent=this.value">
-                <div class="slider-val" id="mitmSliderVal">30</div>
-              </div>
-            </div>
-
-            <!-- Hash Tamper Toggle -->
-            <div class="toggle-row">
-              <span class="toggle-label">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg>
-                Tamper Hash (post-decrypt)
-              </span>
-              <label class="switch" aria-label="Aktifkan Tamper Hash">
-                <input type="checkbox" id="tamperToggle">
-                <span class="switch-slider"></span>
-              </label>
-            </div>
-            <div style="font-size:.78rem;color:var(--text-subtle);margin-top:4px;">Mensimulasikan manipulasi hash di tingkat aplikasi setelah dekripsi berhasil.</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- RIGHT: STEPS + RESULT -->
-      <div style="display:flex;flex-direction:column;gap:16px;">
-
-        <!-- Step Visualization -->
-        <div class="card">
-          <div class="card-header">
-            <h2>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
               Activity Log — Proses Kriptografi
             </h2>
-            <button class="btn btn-secondary" onclick="clearSteps()" style="font-size:.78rem;padding:6px 10px">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+            <button class="btn btn-secondary" onclick="clearActivityLog()" style="font-size:.76rem;padding:6px 10px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
               Bersihkan
             </button>
           </div>
-          <div class="card-body" style="max-height:460px;overflow-y:auto;" id="stepScroll">
+          <div class="card-body" id="stepScroll">
             <div id="stepList">
               <div class="step-placeholder" id="stepPlaceholder">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                <span>Kirim pesan untuk memulai simulasi...</span>
+                <span>Kirim pesan untuk melihat proses kriptografi...</span>
               </div>
             </div>
           </div>
         </div>
-
-        <!-- Result Banner SUCCESS -->
-        <div class="result-banner success" id="resultSuccess">
-          <h3>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:22px;height:22px"><polyline points="20 6 9 17 4 12"/></svg>
-            Pesan Diterima &amp; Terverifikasi
-          </h3>
-          <div class="result-msg-box" id="resMsgText"></div>
-          <div class="result-meta">
-            <div class="meta-item"><div class="meta-label">SHA-3-256 Digest</div><div class="meta-val" id="resDigest"></div></div>
-            <div class="meta-item"><div class="meta-label">IV (96-bit)</div><div class="meta-val" id="resIv"></div></div>
-            <div class="meta-item"><div class="meta-label">Auth Tag (128-bit)</div><div class="meta-val" id="resTag"></div></div>
-            <div class="meta-item"><div class="meta-label">Waktu Proses</div><div class="meta-val" id="resTime"></div></div>
-          </div>
-          <div class="result-badges">
-            <span class="rbadge ok">Auth Tag ✓</span>
-            <span class="rbadge ok">SHA-3-256 ✓</span>
-            <span class="rbadge ok">Integritas ✓</span>
-          </div>
-        </div>
-
-        <!-- Result Banner ERROR -->
-        <div class="result-banner error" id="resultError">
-          <h3>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:22px;height:22px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            Pesan Ditolak
-          </h3>
-          <div class="meta-val" id="errReason" style="color:var(--danger);margin-bottom:14px;font-size:.9rem;"></div>
-          <div class="result-badges" id="errBadges"></div>
-        </div>
-
       </div>
+
     </div>
   </div>
-  <!-- TAB 2: PENGUJIAN KEAMANAN -->
+
+  <!-- ───────── TAB 2: PENGUJIAN KEAMANAN ───────── -->
   <div id="tab-tests" class="tab-panel" role="tabpanel" aria-labelledby="btn-tests">
     <h2 class="section-title">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v11m0 0H5a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h4m0-6h6m0 0h4a2 2 0 0 0 2-2v-4M15 14v7"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v11m0 0H5a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h4m0-6h6m0 0h4a2 2 0 0 0 2-2v-4M15 14v7"/></svg>
       Pengujian Keamanan Kriptografi
     </h2>
     <div class="tests-grid">
@@ -679,6 +189,19 @@
           <span class="test-badge sha3">SAC Test</span>
         </div>
         <div class="test-card-body">
+          <div class="formula-box">
+            <div class="ftitle">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+              Rumus Perhitungan
+            </div>
+            <code>1. Untuk iter i: m' = flip 1 bit dari m</code>
+            <code>2. Δᵢ = HammingDistance( H(m), H(m') )</code>
+            <code>3. pᵢ = (Δᵢ / 256) × 100%</code>
+            <code>4. mean = (1/N) · Σ pᵢ</code>
+            <code>5. std  = √( (1/N) · Σ(pᵢ − mean)² )</code>
+            <code>6. SAC PASS ⇔ 45% ≤ mean ≤ 55%</code>
+            <div class="fnote">Strict Avalanche Criterion: perubahan 1 bit input harus mengubah ±50% bit output.</div>
+          </div>
           <div class="test-input-row">
             <label for="sha3Iter">Iterasi:</label>
             <input type="number" id="sha3Iter" value="100" min="10" max="1000">
@@ -696,17 +219,31 @@
             <div class="test-stats" id="statsSha3"></div>
             <div class="histogram" id="histSha3"></div>
             <div style="font-size:.72rem;color:var(--text-subtle);text-align:center">Distribusi persentase bit berubah per iterasi</div>
+            <div class="calc-trace" id="traceSha3" style="display:none"></div>
           </div>
         </div>
       </div>
 
-      <!-- CARD 2: Avalanche AES-GCM -->
+      <!-- CARD 2: Avalanche AES -->
       <div class="test-card">
         <div class="test-card-header">
           <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Avalanche AES-256-GCM</h3>
           <span class="test-badge aes">Key Sensitivity</span>
         </div>
         <div class="test-card-body">
+          <div class="formula-box">
+            <div class="ftitle">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+              Rumus Perhitungan
+            </div>
+            <code>1. K₁ ← random 256-bit;  K₂ = K₁ ⊕ flip 1 bit</code>
+            <code>2. tag₁ = AES-GCM(K₁, IV, m).tag</code>
+            <code>3. tag₂ = AES-GCM(K₂, IV, m).tag</code>
+            <code>4. Δᵢ = HammingDistance(tag₁, tag₂)  // 128 bit</code>
+            <code>5. pᵢ = (Δᵢ / 128) × 100%</code>
+            <code>6. mean, std seperti Avalanche SHA-3</code>
+            <div class="fnote">Mengukur sensitivitas key — flip 1 bit kunci harus mengubah ±50% bit auth tag.</div>
+          </div>
           <div class="test-input-row">
             <label for="aesIter">Iterasi:</label>
             <input type="number" id="aesIter" value="100" min="10" max="500">
@@ -724,6 +261,7 @@
             <div class="test-stats" id="statsAes"></div>
             <div class="histogram" id="histAes"></div>
             <div style="font-size:.72rem;color:var(--text-subtle);text-align:center">Distribusi persentase bit berubah per iterasi</div>
+            <div class="calc-trace" id="traceAes" style="display:none"></div>
           </div>
         </div>
       </div>
@@ -735,6 +273,19 @@
           <span class="test-badge hash">SHA-3 Hash</span>
         </div>
         <div class="test-card-body">
+          <div class="formula-box">
+            <div class="ftitle">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+              Rumus Perhitungan
+            </div>
+            <code>1. Bangkitkan N pasang pesan acak {mᵢ}</code>
+            <code>2. hᵢ = SHA-3-256(mᵢ)</code>
+            <code>3. C = |{ (i,j) : hᵢ = hⱼ, i ≠ j }|</code>
+            <code>4. Birthday bound:</code>
+            <code>   P(collision) ≈ N² / (2 · 2²⁵⁶)</code>
+            <code>5. PASS ⇔ C = 0</code>
+            <div class="fnote">Sebab keamanan koliisi SHA-3-256 ≈ 2¹²⁸ — secara praktis mustahil ditemukan secara acak.</div>
+          </div>
           <div class="test-input-row">
             <label for="colPairs">Pasang:</label>
             <input type="number" id="colPairs" value="1000" min="100" max="100000">
@@ -750,6 +301,7 @@
               <span class="test-status-badge" id="badgeCol">—</span>
             </div>
             <div class="test-stats" id="statsCol"></div>
+            <div class="calc-trace" id="traceCol" style="display:none"></div>
           </div>
         </div>
       </div>
@@ -761,7 +313,20 @@
           <span class="test-badge perf">AES Throughput</span>
         </div>
         <div class="test-card-body">
-          <div style="font-size:.82rem;color:var(--text-muted);margin-bottom:12px;">Mengukur waktu enkripsi AES-256-GCM untuk berbagai ukuran pesan (50–5000 karakter).</div>
+          <div class="formula-box">
+            <div class="ftitle">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+              Rumus Perhitungan
+            </div>
+            <code>Untuk size ∈ {50,100,500,1000,5000} char:</code>
+            <code>1. Ulangi R kali, ukur encᵢ &amp; decᵢ (ms)</code>
+            <code>2. enc_ms = (1/R) · Σ encᵢ</code>
+            <code>3. dec_ms = (1/R) · Σ decᵢ</code>
+            <code>4. size_MB = size / (1024·1024)</code>
+            <code>5. throughput = size_MB / (enc_ms / 1000)</code>
+            <code>6. PASS ⇔ enc_ms &lt; 5 ms</code>
+            <div class="fnote">Mengukur kecepatan enkripsi/dekripsi AES-256-GCM untuk berbagai ukuran pesan.</div>
+          </div>
           <button class="btn-test" id="btnPerf" onclick="runTest('performance')">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
             <span>Jalankan Benchmark</span>
@@ -773,6 +338,7 @@
               <span class="test-status-badge info" id="badgePerf">AES-256-GCM</span>
             </div>
             <div id="tablePerfWrap"></div>
+            <div class="calc-trace" id="tracePerf" style="display:none"></div>
           </div>
         </div>
       </div>
@@ -780,18 +346,31 @@
     </div>
   </div>
 
-  <!-- TAB 3: THROUGHPUT SHA-3 -->
+  <!-- ───────── TAB 3: THROUGHPUT SHA-3 ───────── -->
   <div id="tab-throughput" class="tab-panel" role="tabpanel" aria-labelledby="btn-throughput">
     <h2 class="section-title">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
       Throughput SHA-3-256
     </h2>
-    <div style="max-width:680px;">
+    <div style="max-width:760px;">
       <div class="card">
         <div class="card-header">
           <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Konfigurasi Pengujian</h2>
         </div>
         <div class="card-body">
+          <div class="formula-box">
+            <div class="ftitle">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+              Rumus Perhitungan
+            </div>
+            <code>Untuk size ∈ {1, 10, 100, 1024} KB:</code>
+            <code>1. Ulangi R kali, ukur tᵢ (detik)</code>
+            <code>2. mean_t = (1/R) · Σ tᵢ</code>
+            <code>3. size_MB = size_KB / 1024</code>
+            <code>4. throughput = size_MB / mean_t  [MB/s]</code>
+            <code>5. PASS ⇔ throughput &gt; 50 MB/s</code>
+            <div class="fnote">Mengukur seberapa cepat SHA-3-256 dapat memroses payload besar.</div>
+          </div>
           <div class="test-input-row">
             <label for="thrRepeats">Repeats per ukuran:</label>
             <input type="number" id="thrRepeats" value="100" min="10" max="1000">
@@ -807,300 +386,67 @@
               <span class="test-status-badge info">SHA-3-256</span>
             </div>
             <div id="tableThrWrap"></div>
+            <div class="calc-trace" id="traceThr" style="display:none"></div>
           </div>
         </div>
       </div>
     </div>
   </div>
+
 </main>
 
-<script>
-/* ── TAB NAVIGATION ───────────────────────────────── */
-function switchTab(name) {
-  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected','false'); });
-  document.getElementById('tab-' + name).classList.add('active');
-  const btn = document.getElementById('btn-' + name);
-  btn.classList.add('active');
-  btn.setAttribute('aria-selected','true');
-}
+<!-- ATTACH MODAL (Resep) -->
+<div class="modal-overlay" id="attachModal" role="dialog" aria-labelledby="attachTitle" aria-modal="true">
+  <div class="modal">
+    <header class="modal-header">
+      <h3 id="attachTitle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
+        Lampirkan Resep Medis
+      </h3>
+      <button class="modal-close" onclick="closeAttachModal()" aria-label="Tutup">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </header>
+    <form id="attachForm" onsubmit="submitAttach(event)">
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="attachPasien">Nama Pasien</label>
+          <input id="attachPasien" type="text" placeholder="Budi Santoso" required>
+        </div>
+        <div class="form-group">
+          <label for="attachDiagnosis">Diagnosis</label>
+          <input id="attachDiagnosis" type="text" placeholder="ISPA" required>
+        </div>
+        <div class="form-group">
+          <label for="attachObat">Nama Obat</label>
+          <input id="attachObat" type="text" placeholder="Amoxicillin 500mg" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="attachDosis">Dosis</label>
+            <input id="attachDosis" type="text" placeholder="3×1" required>
+          </div>
+          <div class="form-group">
+            <label for="attachDurasi">Durasi</label>
+            <input id="attachDurasi" type="text" placeholder="5 hari" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="attachNote">Catatan (opsional)</label>
+          <textarea id="attachNote" rows="2" placeholder="Konsumsi setelah makan..."></textarea>
+        </div>
+      </div>
+      <footer class="modal-footer">
+        <button type="button" class="btn btn-cancel" onclick="closeAttachModal()">Batal</button>
+        <button type="submit" class="btn btn-primary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          Kirim Resep
+        </button>
+      </footer>
+    </form>
+  </div>
+</div>
 
-/* ── CHAR COUNTER ─────────────────────────────────── */
-function updateCharCount() {
-  const n = document.getElementById('msgInput').value.length;
-  document.getElementById('charCount').textContent = n + ' karakter';
-}
-
-/* ── MITM TOGGLE ──────────────────────────────────── */
-function onMitmToggle() {
-  const on = document.getElementById('mitmToggle').checked;
-  document.getElementById('mitmPanel').classList.toggle('open', on);
-}
-
-/* ── CLEAR STEPS ──────────────────────────────────── */
-function clearSteps() {
-  const list = document.getElementById('stepList');
-  list.innerHTML = '<div class="step-placeholder" id="stepPlaceholder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span>Kirim pesan untuk memulai simulasi...</span></div>';
-  document.getElementById('resultSuccess').style.display = 'none';
-  document.getElementById('resultError').style.display   = 'none';
-}
-
-/* ── RESET KEY ────────────────────────────────────── */
-async function resetKey() {
-  try {
-    const r = await fetch('/api/reset_key', { method: 'POST' });
-    if (!r.ok) throw new Error('Server error');
-    const dots = '••••••••••••••••••••••••••••••••';
-    const preview = document.getElementById('keyPreview');
-    preview.textContent = 'Generating...';
-    setTimeout(() => { preview.textContent = dots; }, 600);
-  } catch(e) {
-    alert('Reset key gagal: ' + e.message);
-  }
-}
-
-/* ── BUILD STEP ELEMENT ───────────────────────────── */
-function buildStepEl(step) {
-  const el = document.createElement('div');
-  el.className = 'step-item ' + step.type;
-
-  let detailHTML = '';
-  if (step.detail) {
-    detailHTML = '<div class="step-details">';
-    for (const [k, v] of Object.entries(step.detail)) {
-      detailHTML += `<span><span class="step-key">${k}:</span>${v}</span>`;
-    }
-    detailHTML += '</div>';
-  }
-  el.innerHTML = `<div class="step-badge ${step.type}">${step.type}</div>
-    <div class="step-title">${step.title}</div>${detailHTML}`;
-  return el;
-}
-
-/* ── SEND DATA (Tab 1) ────────────────────────────── */
-async function sendData() {
-  // Reset UI
-  clearSteps();
-  document.getElementById('stepPlaceholder') && document.getElementById('stepPlaceholder').remove && (document.getElementById('stepPlaceholder').style.display = 'none');
-  document.getElementById('btnSend').disabled = true;
-
-  const payload = {
-    message:      document.getElementById('msgInput').value,
-    mitm_enabled: document.getElementById('mitmToggle').checked,
-    mitm_byte_pos: parseInt(document.getElementById('mitmSlider').value) || 30,
-    tamper_hash:  document.getElementById('tamperToggle').checked
-  };
-
-  try {
-    const resp = await fetch('/process', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    const data = await resp.json();
-
-    const list   = document.getElementById('stepList');
-    const scroll = document.getElementById('stepScroll');
-
-    // Remove placeholder
-    const ph = document.getElementById('stepPlaceholder');
-    if (ph) ph.remove();
-
-    let delay = 0;
-    for (const step of data.steps) {
-      delay += step.delay_ms || 300;
-      setTimeout(() => {
-        list.appendChild(buildStepEl(step));
-        scroll.scrollTop = scroll.scrollHeight;
-      }, delay);
-    }
-
-    setTimeout(() => {
-      showResult(data.result);
-      document.getElementById('btnSend').disabled = false;
-    }, delay + 400);
-
-  } catch(err) {
-    document.getElementById('btnSend').disabled = false;
-    alert('Error: ' + err.message);
-  }
-}
-
-/* ── SHOW RESULT (Tab 1) ──────────────────────────── */
-function showResult(result) {
-  const sEl = document.getElementById('resultSuccess');
-  const eEl = document.getElementById('resultError');
-
-  if (result.is_valid) {
-    document.getElementById('resMsgText').textContent = result.message || '';
-    document.getElementById('resDigest').textContent  = result.digest  || '—';
-    document.getElementById('resIv').textContent      = result.iv      || '—';
-    document.getElementById('resTag').textContent     = result.auth_tag|| '—';
-    document.getElementById('resTime').textContent    = result.processing_time_ms + ' ms  |  ' + result.packet_size + ' byte';
-    sEl.style.display = 'block';
-    eEl.style.display = 'none';
-  } else {
-    let reason = 'Verifikasi gagal.';
-    let badges = '';
-    if (result.error === 'mac_failed') {
-      reason = 'Auth Tag tidak cocok — kemungkinan serangan Man-in-the-Middle.';
-      badges = '<span class="rbadge fail">Auth Tag ✗</span><span class="rbadge fail">Integritas Gagal</span>';
-    } else if (result.error === 'hash_mismatch') {
-      reason = 'Hash tidak cocok — integritas konten gagal. Kemungkinan Tamper Hash.';
-      badges = '<span class="rbadge ok">Auth Tag ✓</span><span class="rbadge fail">SHA-3 ✗</span>';
-    }
-    document.getElementById('errReason').textContent   = reason;
-    document.getElementById('errBadges').innerHTML     = badges;
-    eEl.style.display = 'block';
-    sEl.style.display = 'none';
-  }
-}
-
-/* ── TEST RUNNER (Tabs 2 & 3) ─────────────────────── */
-const TEST_CONFIG = {
-  sha3:           { url: '/api/test/avalanche_sha3',  btn: 'btnSha3', spn: 'spnSha3', res: 'resSha3',  render: renderAvalanche.bind(null,'Sha3') },
-  aes:            { url: '/api/test/avalanche_aes',   btn: 'btnAes',  spn: 'spnAes',  res: 'resAes',   render: renderAvalanche.bind(null,'Aes') },
-  collision:      { url: '/api/test/collision',        btn: 'btnCol',  spn: 'spnCol',  res: 'resCol',   render: renderCollision },
-  performance:    { url: '/api/test/performance',      btn: 'btnPerf', spn: 'spnPerf', res: 'resPerf',  render: renderPerfTable },
-  hash_throughput:{ url: '/api/test/hash_throughput',  btn: 'btnThr',  spn: 'spnThr',  res: 'resThr',   render: renderThroughputTable }
-};
-
-function getTestPayload(name) {
-  if (name === 'sha3')            return { iterations: parseInt(document.getElementById('sha3Iter').value) || 100 };
-  if (name === 'aes')             return { iterations: parseInt(document.getElementById('aesIter').value)  || 100 };
-  if (name === 'collision')       return { pairs:      parseInt(document.getElementById('colPairs').value) || 1000 };
-  if (name === 'hash_throughput') return { repeats:    parseInt(document.getElementById('thrRepeats').value)||100 };
-  return {};
-}
-
-async function runTest(name) {
-  const cfg = TEST_CONFIG[name];
-  if (!cfg) return;
-
-  const btn = document.getElementById(cfg.btn);
-  const spn = document.getElementById(cfg.spn);
-  btn.disabled = true;
-  spn.classList.add('active');
-
-  try {
-    const resp = await fetch(cfg.url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(getTestPayload(name))
-    });
-    const data = await resp.json();
-    document.getElementById(cfg.res).classList.add('visible');
-    cfg.render(data);
-  } catch(e) {
-    alert('Pengujian gagal: ' + e.message);
-  } finally {
-    btn.disabled = false;
-    spn.classList.remove('active');
-  }
-}
-
-/* ── RENDER AVALANCHE (SHA-3 & AES) ──────────────── */
-function renderAvalanche(suffix, data) {
-  const mean = data.mean ?? data.mean_percentage ?? 0;
-  const std  = data.std  ?? data.std_dev ?? 0;
-  const mn   = data.min  ?? 0;
-  const mx   = data.max  ?? 0;
-  const sac  = (mean >= 40 && mean <= 60);
-
-  const badge = document.getElementById('badge' + suffix);
-  badge.textContent = sac ? 'SAC PASS ✓' : 'SAC FAIL ✗';
-  badge.className   = 'test-status-badge ' + (sac ? 'pass' : 'fail');
-
-  document.getElementById('stats' + suffix).innerHTML =
-    stat('Mean', mean.toFixed(2) + '%') +
-    stat('Std Dev', std.toFixed(2) + '%') +
-    stat('Min / Max', mn.toFixed(1) + ' / ' + mx.toFixed(1) + '%');
-
-  // Histogram from distribution array or synthesise buckets
-  const hist = document.getElementById('hist' + suffix);
-  hist.innerHTML = '';
-  const dist = data.distribution || data.results || [];
-  if (dist.length > 0) {
-    // bucket into 10 bins between min and max
-    const lo = Math.min(...dist), hi = Math.max(...dist);
-    const bins = 12;
-    const counts = new Array(bins).fill(0);
-    dist.forEach(v => {
-      const i = Math.min(bins - 1, Math.floor(((v - lo) / (hi - lo + 0.001)) * bins));
-      counts[i]++;
-    });
-    const maxC = Math.max(...counts, 1);
-    counts.forEach(c => {
-      const bar = document.createElement('div');
-      bar.className = 'hbar';
-      bar.style.height = Math.max(4, Math.round((c / maxC) * 56)) + 'px';
-      bar.title = c + ' iterasi';
-      hist.appendChild(bar);
-    });
-  } else {
-    // No dist data — draw a representative normal-ish bar from mean
-    for (let i = 0; i < 12; i++) {
-      const bar = document.createElement('div');
-      bar.className = 'hbar';
-      const x = (i - 5.5) / 2;
-      bar.style.height = Math.max(4, Math.round(56 * Math.exp(-x*x/2))) + 'px';
-      hist.appendChild(bar);
-    }
-  }
-}
-
-function stat(label, val) {
-  return `<div class="test-stat"><div class="ts-label">${label}</div><div class="ts-val">${val}</div></div>`;
-}
-
-/* ── RENDER COLLISION ─────────────────────────────── */
-function renderCollision(data) {
-  const collisions = data.collisions ?? 0;
-  const pairs      = data.pairs_tested ?? data.pairs ?? '—';
-  const pass       = collisions === 0;
-
-  const badge = document.getElementById('badgeCol');
-  badge.textContent = pass ? 'ZERO COLLISION ✓' : collisions + ' COLLISI ✗';
-  badge.className   = 'test-status-badge ' + (pass ? 'pass' : 'fail');
-
-  document.getElementById('statsCol').innerHTML =
-    stat('Pasang diuji', pairs) +
-    stat('Collision', collisions) +
-    stat('Status', pass ? '✓ Aman' : '✗ Gagal');
-}
-
-/* ── RENDER PERFORMANCE TABLE ─────────────────────── */
-function renderPerfTable(data) {
-  const rows = data.results || data.data || [];
-  if (!rows.length) return;
-  let html = '<table class="data-table"><thead><tr><th>Ukuran (char)</th><th>Enc (ms)</th><th>Dec (ms)</th><th>Status</th></tr></thead><tbody>';
-  rows.forEach(r => {
-    const ok = (r.enc_ms ?? r.mean_ms ?? 0) < 5;
-    html += `<tr><td>${r.size ?? r.chars ?? '—'}</td><td>${(r.enc_ms ?? r.mean_ms ?? 0).toFixed(3)}</td><td>${(r.dec_ms ?? 0).toFixed(3)}</td><td><span class="pass-pill ${ok?'ok':'fail'}">${ok?'< 5ms ✓':'> 5ms ✗'}</span></td></tr>`;
-  });
-  html += '</tbody></table>';
-  document.getElementById('tablePerfWrap').innerHTML = html;
-  document.getElementById('resPerf').classList.add('visible');
-}
-
-/* ── RENDER THROUGHPUT TABLE ──────────────────────── */
-function renderThroughputTable(data) {
-  const rows = data.results || data.data || [];
-  if (!rows.length) return;
-  let html = '<table class="data-table"><thead><tr><th>Ukuran (KB)</th><th>Waktu (ms)</th><th>Throughput (MB/s)</th><th>Status</th></tr></thead><tbody>';
-  rows.forEach(r => {
-    const ok = (r.throughput_mbs ?? 0) > 50;
-    html += `<tr><td>${r.size_kb ?? '—'}</td><td>${(r.time_ms ?? 0).toFixed(3)}</td><td>${(r.throughput_mbs ?? 0).toFixed(2)}</td><td><span class="pass-pill ${ok?'ok':'fail'}">${ok?'✓':'✗'}</span></td></tr>`;
-  });
-  html += '</tbody></table>';
-  document.getElementById('tableThrWrap').innerHTML = html;
-  document.getElementById('resThr').classList.add('visible');
-}
-
-/* ── INIT ─────────────────────────────────────────── */
-document.addEventListener('DOMContentLoaded', () => {
-  updateCharCount();
-});
-</script>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
 </html>

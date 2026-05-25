@@ -32,7 +32,18 @@ def index():
 def reset_key():
     global SERVER_KEY
     SERVER_KEY = generate_key()
-    return jsonify({'key_preview': SERVER_KEY.hex()[:16] + '...' + SERVER_KEY.hex()[-8:]})
+    return jsonify({
+        'last5': SERVER_KEY.hex()[-5:],
+        'key_preview': SERVER_KEY.hex()[:16] + '...' + SERVER_KEY.hex()[-8:],
+    })
+
+
+# ─────────────────────────────────────────────────────────────
+#  PREVIEW KUNCI (5 KARAKTER TERAKHIR)
+# ─────────────────────────────────────────────────────────────
+@app.route('/api/key_preview', methods=['GET'])
+def key_preview():
+    return jsonify({'last5': SERVER_KEY.hex()[-5:]})
 
 
 # ─────────────────────────────────────────────────────────────
@@ -98,9 +109,9 @@ def process():
         pos = max(0, min(mitm_byte_pos, N_ct - 1))
         before, ct_bytes[pos] = ct_bytes[pos], ct_bytes[pos] ^ 0xFF
         steps.append({'type': 'ATTACK',
-                      'title': f'⚠️  MITM: Memodifikasi byte ke-[{pos}] ciphertext (XOR 0xFF)',
+                      'title': f'MITM: Memodifikasi byte ke-[{pos}] ciphertext (XOR 0xFF)',
                       'detail': {'Byte sebelum': f'0x{before:02X}', 'Byte sesudah': f'0x{ct_bytes[pos]:02X}',
-                                 'Dampak': 'Auth Tag akan mismatch → dekripsi GAGAL'}, 'delay_ms': 500})
+                                 'Dampak': 'Auth Tag akan mismatch, dekripsi GAGAL'}, 'delay_ms': 500})
 
     # Step 6 — Parse + Decrypt
     tampered_packet = build_packet(iv, auth_tag, bytes(ct_bytes))
@@ -114,7 +125,7 @@ def process():
 
     try:
         decrypted_payload = decrypt_aes_gcm(SERVER_KEY, parsed_iv, parsed_ct, parsed_tag)
-        steps.append({'type': 'AES-DEC', 'title': '✓  Auth Tag valid — integritas transmisi terjamin',
+        steps.append({'type': 'AES-DEC', 'title': 'Auth Tag valid, integritas transmisi terjamin',
                       'detail': {'Payload': f'{len(decrypted_payload.encode())} byte ter-dekripsi'}, 'delay_ms': 300})
 
         parts = decrypted_payload.split('||HASH||', 1)
@@ -127,7 +138,7 @@ def process():
 
             if tamper_hash_triggered:
                 tampered = received_hash[:-1] + ('0' if received_hash[-1] != '0' else '1')
-                steps.append({'type': 'ATTACK', 'title': '⚠️  TAMPER: Mengubah hash setelah dekripsi (simulasi storage attack)',
+                steps.append({'type': 'ATTACK', 'title': 'TAMPER: Mengubah hash setelah dekripsi (simulasi storage attack)',
                               'detail': {'Hash asli': received_hash[:24] + '...', 'Hash diubah': tampered[:24] + '...'}, 'delay_ms': 400})
                 received_hash = tampered
 
@@ -136,18 +147,19 @@ def process():
                           'detail': {'Hash computed': computed_hash}, 'delay_ms': 300})
 
             if computed_hash == received_hash:
-                steps.append({'type': 'OK', 'title': '✅  Hash COCOK — Integritas konten terjamin',
-                              'detail': {'Status': 'PESAN VALID — diteruskan ke pasien ✓'}, 'delay_ms': 300})
+                steps.append({'type': 'OK', 'title': 'Hash COCOK, Integritas konten terjamin',
+                              'detail': {'Status': 'PESAN VALID, diteruskan ke penerima'}, 'delay_ms': 300})
                 result.update({'is_valid': True, 'message': dec_message})
             else:
-                steps.append({'type': 'ERROR', 'title': '❌  Hash TIDAK COCOK — Integritas konten gagal',
-                              'detail': {'Penyebab': 'SHA-3 digest mismatch setelah dekripsi'}, 'delay_ms': 300})
+                steps.append({'type': 'ERROR', 'title': 'Hash TIDAK COCOK, Integritas konten gagal',
+                              'detail': {'Penyebab': 'SHA-3 digest mismatch setelah dekripsi',
+                                         'Status': 'PESAN DITOLAK, tidak dikirim ke penerima'}, 'delay_ms': 300})
                 result['error'] = 'hash_mismatch'
 
     except ValueError:
-        steps.append({'type': 'ERROR', 'title': '❌  MAC check FAILED — Auth Tag tidak cocok!',
+        steps.append({'type': 'ERROR', 'title': 'MAC check FAILED, Auth Tag tidak cocok',
                       'detail': {'Penyebab': 'Ciphertext telah dimodifikasi dalam transit',
-                                 'Status': 'PESAN DITOLAK — kemungkinan serangan MITM'}, 'delay_ms': 300})
+                                 'Status': 'PESAN DITOLAK, tidak dikirim ke penerima (kemungkinan MITM)'}, 'delay_ms': 300})
         result['error'] = 'mac_failed'
 
     end_time = time.perf_counter()
