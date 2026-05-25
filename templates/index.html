@@ -88,7 +88,7 @@
         </footer>
       </section>
 
-      <!-- SIDEBAR: CONTROLS -->
+      <!-- SIDEBAR: CONTROLS + RESULT SUMMARY -->
       <aside class="demo-sidebar">
         <!-- Server key -->
         <div class="card sidebar-section">
@@ -145,27 +145,39 @@
             Bersihkan Chat &amp; Log
           </button>
         </div>
+
+        <!-- RESULT SUMMARY — di paling bawah sidebar -->
+        <div class="result-summary placeholder" id="resultSummary" aria-live="polite">
+          <div class="rs-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+            <h3 id="rsTitle">Belum ada pesan terkirim</h3>
+          </div>
+          <div class="rs-body" id="rsBody">
+            <div class="rs-placeholder">
+              Ringkasan pesan diterima &amp; verifikasi akan muncul di sini setelah Anda menekan
+              <strong>Kirim</strong> dari salah satu chat.
+            </div>
+          </div>
+        </div>
       </aside>
 
-      <!-- ACTIVITY LOG (full width below chats) -->
-      <div class="activity-log" style="grid-column: 1 / -1;">
-        <div class="card">
-          <div class="card-header">
-            <h2>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-              Activity Log — Proses Kriptografi
-            </h2>
-            <button class="btn btn-secondary" onclick="clearActivityLog()" style="font-size:.76rem;padding:6px 10px">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
-              Bersihkan
-            </button>
-          </div>
-          <div class="card-body" id="stepScroll">
-            <div id="stepList">
-              <div class="step-placeholder" id="stepPlaceholder">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                <span>Kirim pesan untuk melihat proses kriptografi...</span>
-              </div>
+      <!-- ACTIVITY LOG — sejajar kanan dengan Chat Pasien (col 1+2) -->
+      <div class="activity-log card">
+        <div class="card-header">
+          <h2>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            Activity Log — Proses Kriptografi
+          </h2>
+          <button class="btn btn-secondary" onclick="clearActivityLog()" style="font-size:.76rem;padding:6px 10px">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+            Bersihkan
+          </button>
+        </div>
+        <div class="card-body" id="stepScroll">
+          <div id="stepList">
+            <div class="step-placeholder" id="stepPlaceholder">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              <span>Kirim pesan untuk melihat proses kriptografi...</span>
             </div>
           </div>
         </div>
