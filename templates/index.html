@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Simulator kriptografi e-health berbasis SHA-3-256 dan AES-256-GCM. Kelompok 7 — Tugas Besar Kriptografi.">
-  <title>E-Health Crypto Simulator — Kelompok 7</title>
+  <meta name="description" content="Simulator kriptografi e-health berbasis SHA-3-256 dan AES-256-GCM. Kelompok 7 ΓÇö Tugas Besar Kriptografi.">
+  <title>E-Health Crypto Simulator ΓÇö Kelompok 7</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
@@ -20,7 +20,7 @@
     </svg>
     <div>
       <div class="brand-title">E-Health Crypto Simulator</div>
-      <div class="brand-sub">SHA-3-256 + AES-256-GCM &nbsp;|&nbsp; Kelompok 7 — Kriptografi 2026</div>
+      <div class="brand-sub">SHA-3-256 + AES-256-GCM &nbsp;|&nbsp; Kelompok 7 ΓÇö Kriptografi 2026</div>
     </div>
   </div>
   <div class="header-badge">SECURE CHANNEL</div>
@@ -45,7 +45,7 @@
 <!-- MAIN CONTENT AREA -->
 <main class="app-main">
 
-  <!-- ───────── TAB 1: DEMO (CHAT) ───────── -->
+  <!-- ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ TAB 1: DEMO (CHAT) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ -->
   <div id="tab-demo" class="tab-panel active" role="tabpanel" aria-labelledby="btn-demo">
     <div class="demo-grid">
 
@@ -94,7 +94,7 @@
         <div class="card sidebar-section">
           <span class="field-label">Server AES-256 Key</span>
           <div class="key-display" title="Hanya 5 karakter terakhir yang ditampilkan">
-            <span class="key-dots">••••••••••••••••</span>
+            <span class="key-dots">ΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇó</span>
             <span class="key-last5" id="keyLast5">?????</span>
           </div>
           <button class="btn btn-danger-sm" onclick="resetKey()" style="width:100%; justify-content:center;">
@@ -153,7 +153,7 @@
           <div class="card-header">
             <h2>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-              Activity Log — Proses Kriptografi
+              Activity Log ΓÇö Proses Kriptografi
             </h2>
             <button class="btn btn-secondary" onclick="clearActivityLog()" style="font-size:.76rem;padding:6px 10px">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
@@ -174,7 +174,7 @@
     </div>
   </div>
 
-  <!-- ───────── TAB 2: PENGUJIAN KEAMANAN ───────── -->
+  <!-- ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ TAB 2: PENGUJIAN KEAMANAN ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ -->
   <div id="tab-tests" class="tab-panel" role="tabpanel" aria-labelledby="btn-tests">
     <h2 class="section-title">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v11m0 0H5a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h4m0-6h6m0 0h4a2 2 0 0 0 2-2v-4M15 14v7"/></svg>
@@ -195,12 +195,12 @@
               Rumus Perhitungan
             </div>
             <code>1. Untuk iter i: m' = flip 1 bit dari m</code>
-            <code>2. Δᵢ = HammingDistance( H(m), H(m') )</code>
-            <code>3. pᵢ = (Δᵢ / 256) × 100%</code>
-            <code>4. mean = (1/N) · Σ pᵢ</code>
-            <code>5. std  = √( (1/N) · Σ(pᵢ − mean)² )</code>
-            <code>6. SAC PASS ⇔ 45% ≤ mean ≤ 55%</code>
-            <div class="fnote">Strict Avalanche Criterion: perubahan 1 bit input harus mengubah ±50% bit output.</div>
+            <code>2. ╬öß╡ó = HammingDistance( H(m), H(m') )</code>
+            <code>3. pß╡ó = (╬öß╡ó / 256) ├ù 100%</code>
+            <code>4. mean = (1/N) ┬╖ ╬ú pß╡ó</code>
+            <code>5. std  = ΓêÜ( (1/N) ┬╖ ╬ú(pß╡ó ΓêÆ mean)┬▓ )</code>
+            <code>6. SAC PASS Γçö 45% Γëñ mean Γëñ 55%</code>
+            <div class="fnote">Strict Avalanche Criterion: perubahan 1 bit input harus mengubah ┬▒50% bit output.</div>
           </div>
           <div class="test-input-row">
             <label for="sha3Iter">Iterasi:</label>
@@ -214,7 +214,7 @@
           <div class="test-result" id="resSha3">
             <div class="test-result-header">
               <span style="font-size:.8rem;font-weight:600;color:var(--text-muted)">Hasil Pengujian</span>
-              <span class="test-status-badge" id="badgeSha3">—</span>
+              <span class="test-status-badge" id="badgeSha3">ΓÇö</span>
             </div>
             <div class="test-stats" id="statsSha3"></div>
             <div class="histogram" id="histSha3"></div>
@@ -236,13 +236,13 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
               Rumus Perhitungan
             </div>
-            <code>1. K₁ ← random 256-bit;  K₂ = K₁ ⊕ flip 1 bit</code>
-            <code>2. tag₁ = AES-GCM(K₁, IV, m).tag</code>
-            <code>3. tag₂ = AES-GCM(K₂, IV, m).tag</code>
-            <code>4. Δᵢ = HammingDistance(tag₁, tag₂)  // 128 bit</code>
-            <code>5. pᵢ = (Δᵢ / 128) × 100%</code>
+            <code>1. KΓéü ΓåÉ random 256-bit;  KΓéé = KΓéü Γèò flip 1 bit</code>
+            <code>2. tagΓéü = AES-GCM(KΓéü, IV, m).tag</code>
+            <code>3. tagΓéé = AES-GCM(KΓéé, IV, m).tag</code>
+            <code>4. ╬öß╡ó = HammingDistance(tagΓéü, tagΓéé)  // 128 bit</code>
+            <code>5. pß╡ó = (╬öß╡ó / 128) ├ù 100%</code>
             <code>6. mean, std seperti Avalanche SHA-3</code>
-            <div class="fnote">Mengukur sensitivitas key — flip 1 bit kunci harus mengubah ±50% bit auth tag.</div>
+            <div class="fnote">Mengukur sensitivitas key ΓÇö flip 1 bit kunci harus mengubah ┬▒50% bit auth tag.</div>
           </div>
           <div class="test-input-row">
             <label for="aesIter">Iterasi:</label>
@@ -256,7 +256,7 @@
           <div class="test-result" id="resAes">
             <div class="test-result-header">
               <span style="font-size:.8rem;font-weight:600;color:var(--text-muted)">Hasil Pengujian</span>
-              <span class="test-status-badge" id="badgeAes">—</span>
+              <span class="test-status-badge" id="badgeAes">ΓÇö</span>
             </div>
             <div class="test-stats" id="statsAes"></div>
             <div class="histogram" id="histAes"></div>
@@ -278,13 +278,13 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
               Rumus Perhitungan
             </div>
-            <code>1. Bangkitkan N pasang pesan acak {mᵢ}</code>
-            <code>2. hᵢ = SHA-3-256(mᵢ)</code>
-            <code>3. C = |{ (i,j) : hᵢ = hⱼ, i ≠ j }|</code>
+            <code>1. Bangkitkan N pasang pesan acak {mß╡ó}</code>
+            <code>2. hß╡ó = SHA-3-256(mß╡ó)</code>
+            <code>3. C = |{ (i,j) : hß╡ó = hΓ▒╝, i Γëá j }|</code>
             <code>4. Birthday bound:</code>
-            <code>   P(collision) ≈ N² / (2 · 2²⁵⁶)</code>
-            <code>5. PASS ⇔ C = 0</code>
-            <div class="fnote">Sebab keamanan koliisi SHA-3-256 ≈ 2¹²⁸ — secara praktis mustahil ditemukan secara acak.</div>
+            <code>   P(collision) Γëê N┬▓ / (2 ┬╖ 2┬▓Γü╡Γü╢)</code>
+            <code>5. PASS Γçö C = 0</code>
+            <div class="fnote">Sebab keamanan koliisi SHA-3-256 Γëê 2┬╣┬▓Γü╕ ΓÇö secara praktis mustahil ditemukan secara acak.</div>
           </div>
           <div class="test-input-row">
             <label for="colPairs">Pasang:</label>
@@ -298,7 +298,7 @@
           <div class="test-result" id="resCol">
             <div class="test-result-header">
               <span style="font-size:.8rem;font-weight:600;color:var(--text-muted)">Hasil Pengujian</span>
-              <span class="test-status-badge" id="badgeCol">—</span>
+              <span class="test-status-badge" id="badgeCol">ΓÇö</span>
             </div>
             <div class="test-stats" id="statsCol"></div>
             <div class="calc-trace" id="traceCol" style="display:none"></div>
@@ -318,13 +318,13 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
               Rumus Perhitungan
             </div>
-            <code>Untuk size ∈ {50,100,500,1000,5000} char:</code>
-            <code>1. Ulangi R kali, ukur encᵢ &amp; decᵢ (ms)</code>
-            <code>2. enc_ms = (1/R) · Σ encᵢ</code>
-            <code>3. dec_ms = (1/R) · Σ decᵢ</code>
-            <code>4. size_MB = size / (1024·1024)</code>
+            <code>Untuk size Γêê {50,100,500,1000,5000} char:</code>
+            <code>1. Ulangi R kali, ukur encß╡ó &amp; decß╡ó (ms)</code>
+            <code>2. enc_ms = (1/R) ┬╖ ╬ú encß╡ó</code>
+            <code>3. dec_ms = (1/R) ┬╖ ╬ú decß╡ó</code>
+            <code>4. size_MB = size / (1024┬╖1024)</code>
             <code>5. throughput = size_MB / (enc_ms / 1000)</code>
-            <code>6. PASS ⇔ enc_ms &lt; 5 ms</code>
+            <code>6. PASS Γçö enc_ms &lt; 5 ms</code>
             <div class="fnote">Mengukur kecepatan enkripsi/dekripsi AES-256-GCM untuk berbagai ukuran pesan.</div>
           </div>
           <button class="btn-test" id="btnPerf" onclick="runTest('performance')">
@@ -346,7 +346,7 @@
     </div>
   </div>
 
-  <!-- ───────── TAB 3: THROUGHPUT SHA-3 ───────── -->
+  <!-- ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ TAB 3: THROUGHPUT SHA-3 ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ -->
   <div id="tab-throughput" class="tab-panel" role="tabpanel" aria-labelledby="btn-throughput">
     <h2 class="section-title">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
@@ -363,12 +363,12 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
               Rumus Perhitungan
             </div>
-            <code>Untuk size ∈ {1, 10, 100, 1024} KB:</code>
-            <code>1. Ulangi R kali, ukur tᵢ (detik)</code>
-            <code>2. mean_t = (1/R) · Σ tᵢ</code>
+            <code>Untuk size Γêê {1, 10, 100, 1024} KB:</code>
+            <code>1. Ulangi R kali, ukur tß╡ó (detik)</code>
+            <code>2. mean_t = (1/R) ┬╖ ╬ú tß╡ó</code>
             <code>3. size_MB = size_KB / 1024</code>
             <code>4. throughput = size_MB / mean_t  [MB/s]</code>
-            <code>5. PASS ⇔ throughput &gt; 50 MB/s</code>
+            <code>5. PASS Γçö throughput &gt; 50 MB/s</code>
             <div class="fnote">Mengukur seberapa cepat SHA-3-256 dapat memroses payload besar.</div>
           </div>
           <div class="test-input-row">
@@ -424,7 +424,7 @@
         <div class="form-row">
           <div class="form-group">
             <label for="attachDosis">Dosis</label>
-            <input id="attachDosis" type="text" placeholder="3×1" required>
+            <input id="attachDosis" type="text" placeholder="3├ù1" required>
           </div>
           <div class="form-group">
             <label for="attachDurasi">Durasi</label>
