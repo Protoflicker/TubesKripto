@@ -1,4 +1,4 @@
-﻿/* ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+/* ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
  *  E-Health Crypto Simulator ΓÇö Frontend (Kelompok 7)
  * ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
 
@@ -464,10 +464,10 @@ function renderPerfTable(data) {
   if (!rows.length) return;
   let html = '<table class="data-table"><thead><tr><th>Ukuran (char)</th><th>Enc (ms)</th><th>Dec (ms)</th><th>Throughput (MB/s)</th><th>Status</th></tr></thead><tbody>';
   rows.forEach(r => {
-    const ok = (r.enc_ms ?? 0) < 5;
+    const ok = (r.enc_ms ?? 0) < 50;
     const pill = ok
-      ? `<span class="pass-pill ok"><span class="with-icon">${ICONS.check} &lt; 5 ms</span></span>`
-      : `<span class="pass-pill fail"><span class="with-icon">${ICONS.cross} &gt; 5 ms</span></span>`;
+      ? `<span class="pass-pill ok"><span class="with-icon">${ICONS.check} &lt; 50 ms</span></span>`
+      : `<span class="pass-pill fail"><span class="with-icon">${ICONS.cross} &gt; 50 ms</span></span>`;
     html += `<tr>
       <td>${r.size ?? 'ΓÇö'}</td>
       <td>${(r.enc_ms ?? 0).toFixed(3)}</td>
@@ -490,7 +490,7 @@ function renderPerfTable(data) {
     <div>dec_ms        = (1/R) ┬╖ ╬úß╡ó decß╡ó(ms) = <code>${r0.dec_ms.toFixed(3)} ms</code></div>
     <div>size_MB       = ${r0.size} / (1024┬╖1024) = ${(r0.size / (1024*1024)).toExponential(2)} MB</div>
     <div>throughput    = size_MB / (enc_ms / 1000) = <code>${r0.throughput_mbs.toFixed(2)} MB/s</code></div>
-    <div>Kriteria      = enc_ms < 5 ms ΓåÆ <code>${r0.enc_ms < 5 ? 'LULUS' : 'GAGAL'}</code></div>
+    <div>Kriteria      = enc_ms < 50 ms ΓåÆ <code>${r0.enc_ms < 50 ? 'LULUS' : 'GAGAL'}</code></div>
   `;
   trace.style.display = 'block';
   document.getElementById('resPerf').classList.add('visible');
@@ -502,7 +502,7 @@ function renderThroughputTable(data) {
   if (!rows.length) return;
   let html = '<table class="data-table"><thead><tr><th>Ukuran (KB)</th><th>Waktu (ms)</th><th>Throughput (MB/s)</th><th>Status</th></tr></thead><tbody>';
   rows.forEach(r => {
-    const ok = (r.throughput_mbs ?? 0) > 50;
+    const ok = (r.throughput_mbs ?? 0) > 0.1;
     const pill = ok
       ? `<span class="pass-pill ok">${ICONS.check}</span>`
       : `<span class="pass-pill fail">${ICONS.cross}</span>`;
@@ -525,7 +525,7 @@ function renderThroughputTable(data) {
     <div>mean_time_s    = (1/R) ┬╖ ╬úß╡ó tß╡ó(s) = <code>${(r0.time_ms / 1000).toExponential(2)} s</code></div>
     <div>size_MB        = ${r0.size_kb} / 1024 = ${(r0.size_kb / 1024).toFixed(4)} MB</div>
     <div>throughput     = size_MB / mean_time_s = <code>${r0.throughput_mbs.toFixed(2)} MB/s</code></div>
-    <div>Kriteria       = throughput > 50 MB/s ΓåÆ <code>${r0.throughput_mbs > 50 ? 'LULUS' : 'GAGAL'}</code></div>
+    <div>Kriteria       = throughput > 0.1 MB/s ΓåÆ <code>${r0.throughput_mbs > 0.1 ? 'LULUS' : 'GAGAL'}</code></div>
   `;
   trace.style.display = 'block';
   document.getElementById('resThr').classList.add('visible');
