@@ -3,8 +3,8 @@
 
 [![Python Version](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue.svg)](https://www.python.org)
 [![Security](https://img.shields.io/badge/Security-AES--256--GCM%20%2B%20SHA--3--256-orange.svg)](#)
-[![Dependencies](https://img.shields.io/badge/Dependencies-PyCryptodome%20%3E%3D%203.20.0-green.svg)](#)
-[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)](#)
+[![Dependencies](https://img.shields.io/badge/Crypto-100%25%20Pure%20Python%20(tanpa%20library)-green.svg)](#)
+[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS%20%7C%20Vercel-lightgrey.svg)](#)
 [![Group](https://img.shields.io/badge/Kelompok-7-purple.svg)](#)
 
 ### Kelompok 7
@@ -154,7 +154,8 @@ Berikut adalah visualisasi alur dekripsi di pihak pasien:
 
 ### Prasyarat
 * Python 3.10 atau versi terbaru
-* Pustaka `pycryptodome` (untuk operasi kriptografi AES-GCM)
+* Pustaka `flask` (untuk antarmuka web). Operasi kriptografi AES-GCM & SHA-3
+  diimplementasikan 100% pure Python sehingga **tidak** memerlukan library kriptografi eksternal.
 
 ### Langkah 1 - Clone Repository
 ```bash
@@ -191,6 +192,42 @@ Untuk menjalankan evaluasi performa dan ketahanan statistik sistem:
 ```bash
 python tests/test_avalanche.py
 ```
+
+### Langkah 6 - Deployment ke Vercel (Opsional)
+Aplikasi web (`app.py`) dapat di-hosting gratis di [Vercel](https://vercel.com) sebagai
+serverless function. Repositori sudah menyertakan konfigurasi `vercel.json` dan
+`.vercelignore`, serta `requirements.txt` yang ramping (hanya `flask`, karena seluruh
+kriptografi adalah pure Python tanpa library eksternal).
+
+**Cara deploy (via dashboard):**
+1. Push repositori ke GitHub/GitLab.
+2. Di Vercel, pilih **Add New → Project**, lalu impor repositori ini.
+3. Vercel otomatis mendeteksi `vercel.json` dan runtime Python — klik **Deploy**.
+
+**Cara deploy (via CLI):**
+```bash
+npm i -g vercel
+vercel        # preview deployment
+vercel --prod # production deployment
+```
+
+**Catatan tentang performa di serverless.** Fungsi serverless Vercel memiliki batas waktu
+eksekusi (default ~10 detik). **Ambang/kriteria lulus dibuat IDENTIK** di lokal maupun
+Vercel — enkripsi/dekripsi `< 50 ms` dan throughput hash `> 0.1 MB/s` — tidak dilonggarkan.
+
+Karena implementasi 100% pure Python, aplikasi mendeteksi lingkungan Vercel (env var
+`VERCEL`) dan **hanya memperkecil beban uji** (jumlah iterasi/repeats/pasangan), **bukan
+kriteria lulus**. Tujuannya semata-mata agar setiap endpoint selesai sebelum batas waktu
+fungsi; jika uji beban penuh (mis. 10.000–50.000 hash pure-Python) dipaksakan, fungsi akan
+*timeout* dan tidak mengembalikan hasil sama sekali. Nilai waktu/throughput per-operasi
+tidak dipengaruhi oleh jumlah repeats, sehingga kriteria tetap diuji secara adil.
+
+> ⚠️ **Perhatian:** karena kriteria waktu/throughput bergantung pada kecepatan CPU, uji
+> `Performance` (baris 5000 char) dan `Throughput SHA-3` (ukuran kecil) **bisa saja**
+> menunjukkan GAGAL bila CPU instance Vercel lebih lambat dari PC Anda. Uji yang
+> CPU-independen (Avalanche/SAC dan Collision = 0) dijamin tetap LULUS. Jika ingin ambang
+> waktu/throughput dilonggarkan khusus di serverless, ubah konstanta `ENC_THRESHOLD_MS`,
+> `DEC_THRESHOLD_MS`, dan `HASH_MIN_MBS` di blok `if ON_VERCEL:` pada `app.py`.
 
 ---
 
