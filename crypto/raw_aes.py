@@ -257,15 +257,19 @@ def _increment_counter(counter: bytearray) -> None:
     counter[12:16] = struct.pack('>I', val)
 
 
-def _aes_ctr_keystream(key_bytes: bytes, iv_12: bytes, start_counter: int, length: int) -> bytes:
+def _aes_ctr_keystream(key_bytes: bytes, iv_12: bytes, start_counter: int, length: int, round_keys: list = None) -> bytes:
     """
     Generate keystream AES-CTR.
     
     Counter block J0 untuk GCM (IV 96-bit):
       J0 = IV || 0x00000001 (32-bit counter dimulai dari 1)
     Enkripsi dimulai dari counter+1 (counter awal digunakan untuk GHASH final).
+    
+    Parameter:
+        round_keys: optional precomputed round keys untuk menghindari key expansion ulang
     """
-    round_keys = _key_expansion_256(key_bytes)
+    if round_keys is None:
+        round_keys = _key_expansion_256(key_bytes)
     keystream = bytearray()
     counter = bytearray(iv_12 + struct.pack('>I', start_counter))
     blocks_needed = (length + 15) // 16
@@ -303,13 +307,16 @@ def _int128_to_bytes(n: int) -> bytes:
     return bytes(result)
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# GF(2^128) MULTIPLICATION untuk GHASH
+# ─────────────────────────────────────────────────────────────────────────────
+
 def _gf128_mul(X: int, Y: int) -> int:
     """
     Perkalian di GF(2^128) dengan polinom irredusibel:
     x^128 + x^7 + x^2 + x + 1 (representasi GHASH)
 
     Menggunakan algoritma right-to-left bit-by-bit.
-    R = 0xE1000000000000000000000000000000 (representasi bit-reflected GCM)
     """
     R = 0xE1000000000000000000000000000000
     Z = 0
@@ -358,7 +365,8 @@ def _ghash(H: int, aad: bytes, ciphertext: bytes) -> bytes:
 
     # Process lengths: len(A) || len(C) sebagai 64-bit integers (bits)
     len_block = struct.pack('>QQ', len(aad) * 8, len(ciphertext) * 8)
-    X = _gf128_mul(X ^ _bytes_to_int128(len_block), H)
+    len_int = _bytes_to_int128(len_block)
+    X = _gf128_mul(X ^ len_int, H)
 
     return _int128_to_bytes(X)
 
@@ -411,7 +419,7 @@ def encrypt_aes_gcm_raw(key: bytes, plaintext: str,
 
     # 2. GCTR encrypt: counter dimulai dari 2 (J0 counter = 1, digunakan untuk tag)
     if len(pt_bytes) > 0:
-        keystream = _aes_ctr_keystream(key, iv, start_counter=2, length=len(pt_bytes))
+        keystream = _aes_ctr_keystream(key, iv, start_counter=2, length=len(pt_bytes), round_keys=round_keys)
         ciphertext = _xor_bytes(pt_bytes, keystream)
     else:
         ciphertext = b''
@@ -420,7 +428,7 @@ def encrypt_aes_gcm_raw(key: bytes, plaintext: str,
     S = _ghash(H, aad, ciphertext)
 
     # 4. Auth Tag = AES_K(J0) XOR S  — J0 counter = 1
-    j0_keystream = _aes_ctr_keystream(key, iv, start_counter=1, length=16)
+    j0_keystream = _aes_ctr_keystream(key, iv, start_counter=1, length=16, round_keys=round_keys)
     auth_tag = _xor_bytes(j0_keystream, S)
 
     return iv, ciphertext, auth_tag
@@ -463,7 +471,7 @@ def decrypt_aes_gcm_raw(key: bytes, iv: bytes,
 
     # 2. Hitung ulang GHASH dan auth tag untuk verifikasi
     S = _ghash(H, aad, ciphertext)
-    j0_keystream = _aes_ctr_keystream(key, iv, start_counter=1, length=16)
+    j0_keystream = _aes_ctr_keystream(key, iv, start_counter=1, length=16, round_keys=round_keys)
     expected_tag = _xor_bytes(j0_keystream, S)
 
     # 3. Constant-time tag comparison untuk mencegah timing attack
@@ -475,7 +483,7 @@ def decrypt_aes_gcm_raw(key: bytes, iv: bytes,
 
     # 4. Decrypt (GCTR dengan counter=2)
     if len(ciphertext) > 0:
-        keystream = _aes_ctr_keystream(key, iv, start_counter=2, length=len(ciphertext))
+        keystream = _aes_ctr_keystream(key, iv, start_counter=2, length=len(ciphertext), round_keys=round_keys)
         pt_bytes = _xor_bytes(ciphertext, keystream)
     else:
         pt_bytes = b''
