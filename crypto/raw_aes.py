@@ -133,8 +133,10 @@ _T0, _T1, _T2, _T3 = _build_t_tables()
 # AES KEY EXPANSION — FIPS 197 Section 5.2
 # ─────────────────────────────────────────────────────────────────────────────
 
-# Round constants Rcon[i] = x^(i-1) di GF(2^8)
-_RCON = [_gf_pow(2, i) for i in range(11)]
+# Round constants Rcon[j] = x^(j-1) di GF(2^8), dipakai pada key expansion sebagai
+# temp[0] ^= _RCON[i // Nk]. Indeks j dimulai dari 1 (round pertama → x^0 = 0x01),
+# maka _RCON[0] sengaja 0 (tidak terpakai) agar _RCON[1] = x^0, _RCON[2] = x^1, dst.
+_RCON = [0] + [_gf_pow(2, i) for i in range(10)]
 
 def _key_expansion_256(key: bytes) -> list:
     """
@@ -404,76 +406,60 @@ def _int128_to_bytes(n: int) -> bytes:
 
 def _gf128_mul(X: int, Y: int) -> int:
     """
-    Perkalian di GF(2^128) - highly optimized untuk GHASH.
-    
-    Menggunakan precomputed lookup tables untuk byte-wise operations.
-    Jauh lebih cepat untuk GHASH processing (16 bytes/block).
+    Perkalian di GF(2^128) sesuai NIST SP 800-38D §6.3 (konvensi GCM standar).
+
+    Blok 128-bit ditafsirkan bit-reflected: bit paling kiri (MSB) = koefisien x^0.
+    Operasi "·x" = GESER KANAN 1 bit, lalu reduksi dengan R = 0xE1<<120 bila LSB
+    bernilai 1 (modulus x^128 + x^7 + x^2 + x + 1). Y diproses MSB-first.
+
+    Versi bit-by-bit ini adalah REFERENSI yang lambat; GHASH memakai tabel nibble
+    (_build_ghash_table / _gf128_mul_table) yang byte-exact terhadap fungsi ini.
     """
     Z = 0
     V = X
-    
-    # Process Y bit-by-bit dari MSB ke LSB, tapi dengan direct byte access
-    Y_byte = [(Y >> (8*(15-i))) & 0xFF for i in range(16)]
-    
-    for byte_idx in range(16):
-        for bit_idx in range(8):
-            y_bit = (Y_byte[byte_idx] >> (7 - bit_idx)) & 1
-            if y_bit:
-                Z ^= V
-            
-            # Reduce V: V = V * x mod poly
-            v_msb = (V >> 127) & 1
-            V = ((V << 1) & ((1 << 128) - 1))
-            if v_msb:
-                V ^= 0xE1000000000000000000000000000000
-    
+    for i in range(128):
+        if (Y >> (127 - i)) & 1:
+            Z ^= V
+        if V & 1:
+            V = (V >> 1) ^ _GF128_R
+        else:
+            V >>= 1
     return Z
 
 
-_GF128_R = 0xE1000000000000000000000000000000
-_GF128_MASK = (1 << 128) - 1
+_GF128_R = 0xE1000000000000000000000000000000  # x^128+x^7+x^2+x+1 (bit-reflected)
 
 
 def _build_ghash_table(H: int) -> list:
     """
-    Bangun tabel per-nibble untuk perkalian GF(2^128) dengan H tetap, byte-exact
-    terhadap _gf128_mul(A, H).
+    Bangun tabel per-nibble untuk perkalian GF(2^128) dengan H tetap (konvensi GCM
+    standar NIST SP 800-38D), byte-exact terhadap _gf128_mul(A, H).
 
-    _gf128_mul men-DOUBLE argumen pertama (A, variabel) dan memakai bit argumen
-    kedua (H, konstan) untuk memilih. Hasilnya = A ⊗ P di field "geser-kiri",
-    dengan P = pembalikan-bit 128-bit dari H (koefisien x^k pada P = bit ke-(127-k)
-    dari H). Karena ⊗ komutatif & asosiatif, kita precompute SEKALI:
-      Px[i] = P · x^i  (i = 0..127, bit ke-i dari A)
-    lalu T[j][nib] = kontribusi nibble ke-j (bit 4j..4j+3 dari A). Multiply penuh
-    = XOR 32 lookup, bukan loop 128 bit per blok.
+    Karena H konstan sepanjang pesan, precompute SEKALI:
+      Hx[k] = H · x^k  (k = 0..127), "·x" = geser kanan + reduksi R bila LSB=1.
+    Lalu T[j][nib] = kontribusi nibble ke-j dari A (MSB-first: nibble 0 = bit 127..124).
+    Bit nibble: MSB nibble (0x8) ↔ x^(4j). Perkalian penuh A·H = XOR 32 lookup.
     """
-    # P = bit-reverse 128-bit dari H
-    P = 0
-    h = H
-    for _ in range(128):
-        P = (P << 1) | (h & 1)
-        h >>= 1
-
-    Px = [0] * 128
-    v = P
-    for i in range(128):
-        Px[i] = v
-        msb = v >> 127
-        v = (v << 1) & _GF128_MASK
-        if msb:
-            v ^= _GF128_R
+    Hx = [0] * 128
+    v = H
+    for k in range(128):
+        Hx[k] = v
+        if v & 1:
+            v = (v >> 1) ^ _GF128_R
+        else:
+            v >>= 1
 
     T = []
     for j in range(32):
         base = 4 * j
-        p0, p1, p2, p3 = Px[base], Px[base + 1], Px[base + 2], Px[base + 3]
+        h0, h1, h2, h3 = Hx[base], Hx[base + 1], Hx[base + 2], Hx[base + 3]
         row = [0] * 16
         for nib in range(16):
             acc = 0
-            if nib & 0x1: acc ^= p0   # bit terendah nibble ↔ x^(4j)
-            if nib & 0x2: acc ^= p1
-            if nib & 0x4: acc ^= p2
-            if nib & 0x8: acc ^= p3
+            if nib & 0x8: acc ^= h0   # MSB nibble ↔ x^(4j)
+            if nib & 0x4: acc ^= h1
+            if nib & 0x2: acc ^= h2
+            if nib & 0x1: acc ^= h3
             row[nib] = acc
         T.append(row)
     return T
@@ -482,9 +468,10 @@ def _build_ghash_table(H: int) -> list:
 def _gf128_mul_table(A: int, T: list) -> int:
     """Perkalian A · H di GF(2^128) memakai tabel nibble hasil _build_ghash_table."""
     Z = 0
+    shift = 124
     for j in range(32):
-        Z ^= T[j][A & 0xF]
-        A >>= 4
+        Z ^= T[j][(A >> shift) & 0xF]
+        shift -= 4
     return Z
 
 
@@ -719,6 +706,25 @@ def run_kat() -> bool:
     ok5 = len(rk) == 15
     print(f"  {'[PASS]' if ok5 else '[FAIL]'} Key expansion: {len(rk)} round keys (expected 15)")
     all_pass = all_pass and ok5
+
+    # Test 6: NIST FIPS 197 Appendix C.3 — AES-256 single-block KAT (vektor eksternal)
+    kat_key = bytes.fromhex('000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f')
+    kat_pt  = bytes.fromhex('00112233445566778899aabbccddeeff')
+    kat_ct  = _aes_encrypt_block(kat_pt, _key_expansion_256(kat_key)).hex()
+    ok6 = (kat_ct == '8ea2b7ca516745bfeafc49904b496089')
+    print(f"  {'[PASS]' if ok6 else '[FAIL]'} NIST FIPS 197 C.3 block KAT: {kat_ct}")
+    all_pass = all_pass and ok6
+
+    # Test 7: NIST SP 800-38D Test Case 14 — AES-256-GCM auth tag (key/IV/PT/AAD = 0)
+    z_key = b'\x00' * 32
+    z_iv  = b'\x00' * 12
+    z_rk  = _key_expansion_256(z_key)
+    z_H   = _bytes_to_int128(_aes_encrypt_block(b'\x00' * 16, z_rk))
+    z_tag = _xor_bytes(_aes_ctr_keystream(z_key, z_iv, 1, 16, z_rk),
+                       _ghash(z_H, b'', b'')).hex()
+    ok7 = (z_tag == '530f8afbc74536b9a963b4f1c4cb738b')
+    print(f"  {'[PASS]' if ok7 else '[FAIL]'} NIST SP 800-38D TC14 GCM tag: {z_tag}")
+    all_pass = all_pass and ok7
 
     print(f"\n  Hasil: {'SEMUA LULUS' if all_pass else 'ADA YANG GAGAL'}")
     print("=" * 60)
