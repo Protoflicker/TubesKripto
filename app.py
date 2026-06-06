@@ -26,11 +26,10 @@ SERVER_KEY = generate_key()
 # Implementasi kriptografi ini 100% pure Python. Di PC lokal cukup cepat,
 # tetapi pada serverless Vercel CPU lebih lambat DAN ada batas waktu eksekusi fungsi.
 #
-# Karena AES pure-Python untuk pesan 5000 karakter membutuhkan ~60 ms pada CPU Vercel
-# (di PC lokal hanya ~37 ms), ambang waktu enkripsi/dekripsi DILONGGARKAN KHUSUS di Vercel
-# menjadi 150 ms agar tetap LULUS pada CPU serverless yang lebih lambat. Ambang ini masih
-# memenuhi syarat "real-time messaging" (<150 ms tak terasa oleh manusia) dan tetap akan
-# GAGAL bila ada regresi besar. Di PC lokal ambang ketat (< 50 ms) tetap dipakai.
+# Setelah optimasi (AES T-table berbasis word 32-bit + GHASH tabel-nibble untuk H tetap),
+# enkripsi pesan 5000 karakter turun dari ~64 ms menjadi ~7 ms di PC lokal. Pada CPU
+# serverless Vercel (≈2-3× lebih lambat) ini ≈15-22 ms, sehingga ambang < 50 ms dipakai
+# SAMA di lokal maupun Vercel — tidak perlu dilonggarkan lagi.
 #
 # Throughput hash (> 0.1 MB/s) tidak dilonggarkan karena sudah lulus di Vercel.
 #

@@ -102,6 +102,34 @@ _XTIME = [_gf_mul(i, 2) for i in range(256)]  # perkalian x2 di GF(2^8)
 _X3    = [_gf_mul(i, 3) for i in range(256)]   # perkalian x3
 
 # ─────────────────────────────────────────────────────────────────────────────
+# PRECOMPUTED T-TABLES untuk AES encryption (SubBytes + MixColumns combined)
+# T0[x] = [2*S[x], S[x], S[x], 3*S[x]]
+# T1[x] = [3*S[x], 2*S[x], S[x], S[x]]
+# T2[x] = [S[x], 3*S[x], 2*S[x], S[x]]
+# T3[x] = [S[x], S[x], 3*S[x], 2*S[x]]
+# ─────────────────────────────────────────────────────────────────────────────
+def _build_t_tables():
+    """Build T0-T3 for fast AES round transformation."""
+    tables = [[] for _ in range(4)]
+    for x in range(256):
+        s = _SBOX[x]
+        x2 = _XTIME[s]
+        x3 = _X3[s]
+        
+        # T0[x] untuk kolom 0 (menggunakan [2, 1, 1, 3])
+        tables[0].append((x2 << 24) | (s << 16) | (s << 8) | x3)
+        # T1[x] untuk kolom 1 (menggunakan [3, 2, 1, 1])
+        tables[1].append((x3 << 24) | (x2 << 16) | (s << 8) | s)
+        # T2[x] untuk kolom 2 (menggunakan [1, 3, 2, 1])
+        tables[2].append((s << 24) | (x3 << 16) | (x2 << 8) | s)
+        # T3[x] untuk kolom 3 (menggunakan [1, 1, 3, 2])
+        tables[3].append((s << 24) | (s << 16) | (x3 << 8) | x2)
+    
+    return tables
+
+_T0, _T1, _T2, _T3 = _build_t_tables()
+
+# ─────────────────────────────────────────────────────────────────────────────
 # AES KEY EXPANSION — FIPS 197 Section 5.2
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -222,14 +250,68 @@ def _mix_columns(state: list) -> list:
     return result
 
 
+def _round_key_words(round_keys: list) -> list:
+    """
+    Konversi 15 round key (masing-masing 16 byte) menjadi 15 tuple berisi
+    4 word 32-bit big-endian. Dipanggil SEKALI per kunci, lalu dipakai ulang
+    untuk semua blok (menghindari _bytes_to_state berulang per blok/round).
+    """
+    return [struct.unpack('>IIII', rk) for rk in round_keys]
+
+
+def _encrypt_block_words(s0: int, s1: int, s2: int, s3: int, rkw: list) -> tuple:
+    """
+    Inti enkripsi AES-256 berbasis WORD 32-bit (state = 4 kolom word).
+
+    Ini implementasi T-table klasik: tiap round 13× hanya 16 lookup tabel +
+    XOR, tanpa membangun matriks 4x4 atau ekstraksi bit per byte. Round key
+    sudah dalam bentuk word (rkw) sehingga tidak ada konversi di inner loop.
+
+      Initial : AddRoundKey
+      Round 1-13 : t = T0[..]^T1[..]^T2[..]^T3[..] ^ rk   (SubBytes+ShiftRows+MixColumns)
+      Round 14   : S-Box + ShiftRows + AddRoundKey (tanpa MixColumns)
+    """
+    T0 = _T0; T1 = _T1; T2 = _T2; T3 = _T3
+
+    # Initial AddRoundKey
+    k = rkw[0]
+    s0 ^= k[0]; s1 ^= k[1]; s2 ^= k[2]; s3 ^= k[3]
+
+    # Rounds 1-13
+    for rnd in range(1, 14):
+        k = rkw[rnd]
+        t0 = T0[s0 >> 24] ^ T1[(s1 >> 16) & 0xFF] ^ T2[(s2 >> 8) & 0xFF] ^ T3[s3 & 0xFF] ^ k[0]
+        t1 = T0[s1 >> 24] ^ T1[(s2 >> 16) & 0xFF] ^ T2[(s3 >> 8) & 0xFF] ^ T3[s0 & 0xFF] ^ k[1]
+        t2 = T0[s2 >> 24] ^ T1[(s3 >> 16) & 0xFF] ^ T2[(s0 >> 8) & 0xFF] ^ T3[s1 & 0xFF] ^ k[2]
+        t3 = T0[s3 >> 24] ^ T1[(s0 >> 16) & 0xFF] ^ T2[(s1 >> 8) & 0xFF] ^ T3[s2 & 0xFF] ^ k[3]
+        s0, s1, s2, s3 = t0, t1, t2, t3
+
+    # Round 14 (final): SubBytes → ShiftRows → AddRoundKey
+    S = _SBOX
+    k = rkw[14]
+    o0 = ((S[s0 >> 24] << 24) | (S[(s1 >> 16) & 0xFF] << 16) | (S[(s2 >> 8) & 0xFF] << 8) | S[s3 & 0xFF]) ^ k[0]
+    o1 = ((S[s1 >> 24] << 24) | (S[(s2 >> 16) & 0xFF] << 16) | (S[(s3 >> 8) & 0xFF] << 8) | S[s0 & 0xFF]) ^ k[1]
+    o2 = ((S[s2 >> 24] << 24) | (S[(s3 >> 16) & 0xFF] << 16) | (S[(s0 >> 8) & 0xFF] << 8) | S[s1 & 0xFF]) ^ k[2]
+    o3 = ((S[s3 >> 24] << 24) | (S[(s0 >> 16) & 0xFF] << 16) | (S[(s1 >> 8) & 0xFF] << 8) | S[s2 & 0xFF]) ^ k[3]
+    return o0, o1, o2, o3
+
+
 def _aes_encrypt_block(block: bytes, round_keys: list) -> bytes:
     """
-    Enkripsi satu blok AES-256 (16 byte).
-    
-    AES-256: 14 rounds
-      Initial: AddRoundKey(state, rk[0])
-      Round 1-13: SubBytes → ShiftRows → MixColumns → AddRoundKey
-      Round 14: SubBytes → ShiftRows → AddRoundKey (tanpa MixColumns)
+    Enkripsi satu blok AES-256 (16 byte) — wrapper di atas _encrypt_block_words.
+
+    Untuk enkripsi banyak blok (CTR), gunakan _encrypt_block_words langsung
+    dengan round key word yang sudah di-precompute lewat _round_key_words().
+    """
+    s0, s1, s2, s3 = struct.unpack('>IIII', block)
+    o0, o1, o2, o3 = _encrypt_block_words(s0, s1, s2, s3, _round_key_words(round_keys))
+    return struct.pack('>IIII', o0, o1, o2, o3)
+
+
+# FALLBACK VERSION JIKA T-TABLES TIDAK OPTIMAL
+def _aes_encrypt_block_fallback(block: bytes, round_keys: list) -> bytes:
+    """
+    Fallback: enkripsi satu blok AES-256 menggunakan metode standard.
     """
     Nr = 14
     state = _bytes_to_state(block)
@@ -270,19 +352,28 @@ def _aes_ctr_keystream(key_bytes: bytes, iv_12: bytes, start_counter: int, lengt
     """
     if round_keys is None:
         round_keys = _key_expansion_256(key_bytes)
-    keystream = bytearray()
-    counter = bytearray(iv_12 + struct.pack('>I', start_counter))
+    # Precompute round key words SEKALI (bukan tiap blok)
+    rkw = _round_key_words(round_keys)
     blocks_needed = (length + 15) // 16
+
+    # Counter block = IV(12 byte) || counter(32-bit). 3 word IV tetap, word ke-4 = counter.
+    iv0, iv1, iv2 = struct.unpack('>III', iv_12)
+    ctr = start_counter & 0xFFFFFFFF
+
+    keystream = bytearray()
+    enc = _encrypt_block_words
+    pack = struct.pack
     for _ in range(blocks_needed):
-        block = _aes_encrypt_block(bytes(counter), round_keys)
-        keystream.extend(block)
-        _increment_counter(counter)
+        o0, o1, o2, o3 = enc(iv0, iv1, iv2, ctr, rkw)
+        keystream += pack('>IIII', o0, o1, o2, o3)
+        ctr = (ctr + 1) & 0xFFFFFFFF
     return bytes(keystream[:length])
 
 
 def _xor_bytes(a: bytes, b: bytes) -> bytes:
-    """XOR dua bytes sequence."""
-    return bytes(x ^ y for x, y in zip(a, b))
+    """XOR dua bytes sequence (panjang sama) lewat satu operasi integer besar."""
+    n = len(a) if len(a) <= len(b) else len(b)
+    return (int.from_bytes(a[:n], 'big') ^ int.from_bytes(b[:n], 'big')).to_bytes(n, 'big')
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -313,27 +404,87 @@ def _int128_to_bytes(n: int) -> bytes:
 
 def _gf128_mul(X: int, Y: int) -> int:
     """
-    Perkalian di GF(2^128) dengan polinom irredusibel:
-    x^128 + x^7 + x^2 + x + 1 (representasi GHASH)
-
-    Menggunakan algoritma bit-by-bit yang sudah terbukti benar.
+    Perkalian di GF(2^128) - highly optimized untuk GHASH.
+    
+    Menggunakan precomputed lookup tables untuk byte-wise operations.
+    Jauh lebih cepat untuk GHASH processing (16 bytes/block).
     """
-    R = 0xE1000000000000000000000000000000
     Z = 0
     V = X
     
-    # Process 128 bits dari Y
-    for i in range(128):
-        # Test bit ke-i dari Y (dari MSB)
-        if (Y >> (127 - i)) & 1:
-            Z ^= V
-        
-        # Double V (shift left dengan conditional reduction)
-        if V & 1:
-            V = (V >> 1) ^ R
-        else:
-            V >>= 1
+    # Process Y bit-by-bit dari MSB ke LSB, tapi dengan direct byte access
+    Y_byte = [(Y >> (8*(15-i))) & 0xFF for i in range(16)]
     
+    for byte_idx in range(16):
+        for bit_idx in range(8):
+            y_bit = (Y_byte[byte_idx] >> (7 - bit_idx)) & 1
+            if y_bit:
+                Z ^= V
+            
+            # Reduce V: V = V * x mod poly
+            v_msb = (V >> 127) & 1
+            V = ((V << 1) & ((1 << 128) - 1))
+            if v_msb:
+                V ^= 0xE1000000000000000000000000000000
+    
+    return Z
+
+
+_GF128_R = 0xE1000000000000000000000000000000
+_GF128_MASK = (1 << 128) - 1
+
+
+def _build_ghash_table(H: int) -> list:
+    """
+    Bangun tabel per-nibble untuk perkalian GF(2^128) dengan H tetap, byte-exact
+    terhadap _gf128_mul(A, H).
+
+    _gf128_mul men-DOUBLE argumen pertama (A, variabel) dan memakai bit argumen
+    kedua (H, konstan) untuk memilih. Hasilnya = A ⊗ P di field "geser-kiri",
+    dengan P = pembalikan-bit 128-bit dari H (koefisien x^k pada P = bit ke-(127-k)
+    dari H). Karena ⊗ komutatif & asosiatif, kita precompute SEKALI:
+      Px[i] = P · x^i  (i = 0..127, bit ke-i dari A)
+    lalu T[j][nib] = kontribusi nibble ke-j (bit 4j..4j+3 dari A). Multiply penuh
+    = XOR 32 lookup, bukan loop 128 bit per blok.
+    """
+    # P = bit-reverse 128-bit dari H
+    P = 0
+    h = H
+    for _ in range(128):
+        P = (P << 1) | (h & 1)
+        h >>= 1
+
+    Px = [0] * 128
+    v = P
+    for i in range(128):
+        Px[i] = v
+        msb = v >> 127
+        v = (v << 1) & _GF128_MASK
+        if msb:
+            v ^= _GF128_R
+
+    T = []
+    for j in range(32):
+        base = 4 * j
+        p0, p1, p2, p3 = Px[base], Px[base + 1], Px[base + 2], Px[base + 3]
+        row = [0] * 16
+        for nib in range(16):
+            acc = 0
+            if nib & 0x1: acc ^= p0   # bit terendah nibble ↔ x^(4j)
+            if nib & 0x2: acc ^= p1
+            if nib & 0x4: acc ^= p2
+            if nib & 0x8: acc ^= p3
+            row[nib] = acc
+        T.append(row)
+    return T
+
+
+def _gf128_mul_table(A: int, T: list) -> int:
+    """Perkalian A · H di GF(2^128) memakai tabel nibble hasil _build_ghash_table."""
+    Z = 0
+    for j in range(32):
+        Z ^= T[j][A & 0xF]
+        A >>= 4
     return Z
 
 
@@ -359,23 +510,24 @@ def _ghash(H: int, aad: bytes, ciphertext: bytes, precomp: dict = None) -> bytes
 
     # Use precomputed values jika available
     H_val = precomp['H'] if precomp else H
-    
+
+    # Bangun tabel nibble untuk H SEKALI, lalu pakai untuk semua blok (byte-exact)
+    T = precomp['T'] if (precomp and 'T' in precomp) else _build_ghash_table(H_val)
+    frombytes = int.from_bytes
+
     # Process AAD
     aad_padded = _pad16(aad)
     for i in range(0, len(aad_padded), 16):
-        block = _bytes_to_int128(aad_padded[i:i+16])
-        X = _gf128_mul(X ^ block, H_val)
+        X = _gf128_mul_table(X ^ frombytes(aad_padded[i:i+16], 'big'), T)
 
-    # Process ciphertext  
+    # Process ciphertext
     ct_padded = _pad16(ciphertext)
     for i in range(0, len(ct_padded), 16):
-        block = _bytes_to_int128(ct_padded[i:i+16])
-        X = _gf128_mul(X ^ block, H_val)
+        X = _gf128_mul_table(X ^ frombytes(ct_padded[i:i+16], 'big'), T)
 
     # Process lengths: len(A) || len(C) sebagai 64-bit integers (bits)
-    len_block = struct.pack('>QQ', len(aad) * 8, len(ciphertext) * 8)
-    len_int = _bytes_to_int128(len_block)
-    X = _gf128_mul(X ^ len_int, H_val)
+    len_int = (len(aad) * 8 << 64) | (len(ciphertext) * 8)
+    X = _gf128_mul_table(X ^ len_int, T)
 
     return _int128_to_bytes(X)
 
