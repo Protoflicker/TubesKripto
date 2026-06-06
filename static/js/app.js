@@ -1,11 +1,11 @@
-/* ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
- *  E-Health Crypto Simulator ΓÇö Frontend (Kelompok 7)
- * ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
+/* ─────────────────────────────────────────────────────────────
+ *  E-Health Crypto Simulator — Frontend (Kelompok 7)
+ * ───────────────────────────────────────────────────────────── */
 
-/* ΓöÇΓöÇ STATE ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
+/* ── STATE ────────────────────────────────────────── */
 const chatHistory = []; // {from:'doctor'|'patient', text, attachment, time}
 
-/* ΓöÇΓöÇ INLINE ICONS ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
+/* ── INLINE ICONS ─────────────────────────────────── */
 const ICONS = {
   check: '<svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
   cross: '<svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
@@ -14,7 +14,7 @@ const ICONS = {
   shield:'<svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
 };
 
-/* ΓöÇΓöÇ TAB NAVIGATION ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
+/* ── TAB NAVIGATION ───────────────────────────────── */
 function switchTab(name) {
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b => {
@@ -27,7 +27,7 @@ function switchTab(name) {
   btn.setAttribute('aria-selected', 'true');
 }
 
-/* ΓöÇΓöÇ KEY DISPLAY ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
+/* ── KEY DISPLAY ──────────────────────────────────── */
 async function loadKeyPreview() {
   try {
     const r = await fetch('/api/key_preview');
@@ -53,15 +53,15 @@ async function resetKey() {
   }
 }
 
-/* ΓöÇΓöÇ MITM TOGGLE ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
+/* ── MITM TOGGLE ──────────────────────────────────── */
 function onMitmToggle() {
   const on = document.getElementById('mitmToggle').checked;
   document.getElementById('mitmPanel').classList.toggle('open', on);
 }
 
-/* ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+/* ─────────────────────────────────────────────────────────────
  *  CHAT
- * ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
+ * ───────────────────────────────────────────────────────────── */
 
 function renderChat() {
   const doctorBody = document.getElementById('chatDoctor');
@@ -115,9 +115,9 @@ function buildMsgRow(msg, viewer) {
   if (msg.text) {
     html += `<div>${escapeHTML(msg.text)}</div>`;
   }
-  const time = msg.time || 'ΓÇö';
+  const time = msg.time || '—';
   const status = msg.failed
-    ? `<span class="with-icon">${ICONS.warn} Tidak terkirim ┬╖ ${FAILURE_REASON[msg.error] || 'verifikasi gagal'}</span>`
+    ? `<span class="with-icon">${ICONS.warn} Tidak terkirim · ${FAILURE_REASON[msg.error] || 'verifikasi gagal'}</span>`
     : `<span class="with-icon">${ICONS.check} Terenkripsi</span>`;
   html += `<div class="msg-meta">${time} ${status}</div>`;
 
@@ -161,7 +161,7 @@ function clearChat() {
   clearActivityLog();
 }
 
-/* ΓöÇΓöÇ BUILD MESSAGE PAYLOAD ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
+/* ── BUILD MESSAGE PAYLOAD ───────────────────────── */
 function buildPayloadText(text, attachment) {
   if (!attachment) return text || '';
   const parts = [
@@ -176,7 +176,7 @@ function buildPayloadText(text, attachment) {
   return parts.join('. ');
 }
 
-/* ΓöÇΓöÇ SEND MESSAGE ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
+/* ── SEND MESSAGE ─────────────────────────────────── */
 async function sendMessage(from, text, attachment) {
   if (!text && !attachment) return;
 
@@ -238,7 +238,7 @@ function setSendButtonsDisabled(disabled) {
   document.getElementById('btnPatientSend').disabled = disabled;
 }
 
-/* ΓöÇΓöÇ DOCTOR / PATIENT SEND BUTTONS ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
+/* ── DOCTOR / PATIENT SEND BUTTONS ───────────────── */
 function onDoctorSend() {
   const ta = document.getElementById('doctorInput');
   const text = ta.value.trim();
@@ -254,7 +254,7 @@ function onPatientSend() {
   sendMessage('patient', text, null);
 }
 
-/* ΓöÇΓöÇ ATTACH MODAL ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
+/* ── ATTACH MODAL ─────────────────────────────────── */
 function openAttachModal() {
   document.getElementById('attachModal').classList.add('open');
   document.getElementById('attachPasien').focus();
@@ -282,7 +282,7 @@ function submitAttach(ev) {
   sendMessage('doctor', note || '', a);
 }
 
-/* ΓöÇΓöÇ ACTIVITY LOG ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
+/* ── ACTIVITY LOG ─────────────────────────────────── */
 function clearActivityLog() {
   const list = document.getElementById('stepList');
   list.innerHTML = `<div class="step-placeholder" id="stepPlaceholder">
@@ -308,9 +308,9 @@ function buildStepEl(step) {
   return el;
 }
 
-/* ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+/* ─────────────────────────────────────────────────────────────
  *  SECURITY TESTS (Tab 2 & 3)
- * ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
+ * ───────────────────────────────────────────────────────────── */
 const TEST_CONFIG = {
   sha3:            { url: '/api/test/avalanche_sha3',  btn: 'btnSha3', spn: 'spnSha3', res: 'resSha3',  render: renderAvalanche.bind(null, 'Sha3', 256) },
   aes:             { url: '/api/test/avalanche_aes',   btn: 'btnAes',  spn: 'spnAes',  res: 'resAes',   render: renderAvalanche.bind(null, 'Aes', 128) },
@@ -351,7 +351,7 @@ async function runTest(name) {
   }
 }
 
-/* ΓöÇΓöÇ RENDER AVALANCHE ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
+/* ── RENDER AVALANCHE ────────────────────────────── */
 function renderAvalanche(suffix, totalBits, data) {
   const mean = data.mean ?? 0;
   const std  = data.std  ?? 0;
@@ -402,11 +402,11 @@ function renderAvalanche(suffix, totalBits, data) {
     <div class="ctitle">Perhitungan</div>
     <div>N (iterasi)   = ${N}</div>
     <div>Total bit out = ${totalBits} bit</div>
-    <div>Contoh iter 1 : changed = ${exampleBits} bit  ΓåÆ  ${exampleBits}/${totalBits} ├ù 100% = <code>${exampleVal.toFixed(2)}%</code></div>
-    <div>╬ú percentage  Γëê ${expandedSum}</div>
-    <div>mean          = ╬ú / N = ${expandedSum} / ${N} = <code>${mean.toFixed(2)}%</code></div>
-    <div>std           = ΓêÜ(╬ú(xß╡ó ΓêÆ mean)┬▓ / N) = <code>${std.toFixed(2)}%</code></div>
-    <div>SAC criterion : 45% Γëñ mean Γëñ 55%  ΓåÆ  <code>${sac ? 'LULUS' : 'GAGAL'}</code></div>
+    <div>Contoh iter 1 : changed = ${exampleBits} bit  →  ${exampleBits}/${totalBits} × 100% = <code>${exampleVal.toFixed(2)}%</code></div>
+    <div>Σ percentage  ≈ ${expandedSum}</div>
+    <div>mean          = Σ / N = ${expandedSum} / ${N} = <code>${mean.toFixed(2)}%</code></div>
+    <div>std           = √(Σ(xᵢ − mean)² / N) = <code>${std.toFixed(2)}%</code></div>
+    <div>SAC criterion : 45% ≤ mean ≤ 55%  →  <code>${sac ? 'LULUS' : 'GAGAL'}</code></div>
   `;
   trace.style.display = 'block';
 }
@@ -418,7 +418,7 @@ function statHTML(label, htmlVal) {
   return `<div class="test-stat"><div class="ts-label">${label}</div><div class="ts-val">${htmlVal}</div></div>`;
 }
 
-/* ΓöÇΓöÇ RENDER COLLISION ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
+/* ── RENDER COLLISION ─────────────────────────────── */
 function renderCollision(data) {
   const collisions = data.collisions ?? 0;
   const pairs      = data.pairs_tested ?? data.pairs ?? 0;
@@ -438,12 +438,12 @@ function renderCollision(data) {
       ? `<span class="with-icon">${ICONS.check} Aman</span>`
       : `<span class="with-icon">${ICONS.cross} Gagal</span>`);
 
-  // birthday-bound estimate: P Γëê N┬▓ / (2 ├ù 2^256)
-  // log10(P) Γëê 2 log10(N) ΓêÆ log10(2) ΓêÆ 256 log10(2)
+  // birthday-bound estimate: P ≈ N² / (2 × 2^256)
+  // log10(P) ≈ 2 log10(N) − log10(2) − 256 log10(2)
   const log10P = pairs > 0
     ? (2 * Math.log10(pairs) - Math.log10(2) - 256 * Math.log10(2))
     : 0;
-  const probStr = pairs > 0 ? `Γëê 10^${log10P.toFixed(1)}` : 'ΓÇö';
+  const probStr = pairs > 0 ? `≈ 10^${log10P.toFixed(1)}` : '—';
 
   const trace = document.getElementById('traceCol');
   trace.innerHTML = `
@@ -451,14 +451,14 @@ function renderCollision(data) {
     <div>N (pasang)        = ${pairs}</div>
     <div>Unique hash       = ${unique}</div>
     <div>Collision count   = ${collisions}</div>
-    <div>Birthday bound    = N┬▓ / (2 ┬╖ 2┬▓Γü╡Γü╢)</div>
-    <div>                  = ${pairs}┬▓ / (2 ┬╖ 2┬▓Γü╡Γü╢) <code>${probStr}</code></div>
-    <div>Status            = (collision == 0) ΓåÆ <code>${pass ? 'AMAN' : 'GAGAL'}</code></div>
+    <div>Birthday bound    = N² / (2 · 2²⁵⁶)</div>
+    <div>                  = ${pairs}² / (2 · 2²⁵⁶) <code>${probStr}</code></div>
+    <div>Status            = (collision == 0) → <code>${pass ? 'AMAN' : 'GAGAL'}</code></div>
   `;
   trace.style.display = 'block';
 }
 
-/* ΓöÇΓöÇ RENDER PERFORMANCE TABLE ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
+/* ── RENDER PERFORMANCE TABLE ─────────────────────── */
 function renderPerfTable(data) {
   const rows = data.results || [];
   if (!rows.length) return;
@@ -469,7 +469,7 @@ function renderPerfTable(data) {
       ? `<span class="pass-pill ok"><span class="with-icon">${ICONS.check} &lt; 50 ms</span></span>`
       : `<span class="pass-pill fail"><span class="with-icon">${ICONS.cross} &gt; 50 ms</span></span>`;
     html += `<tr>
-      <td>${r.size ?? 'ΓÇö'}</td>
+      <td>${r.size ?? '—'}</td>
       <td>${(r.enc_ms ?? 0).toFixed(3)}</td>
       <td>${(r.dec_ms ?? 0).toFixed(3)}</td>
       <td>${(r.throughput_mbs ?? 0).toFixed(2)}</td>
@@ -486,17 +486,17 @@ function renderPerfTable(data) {
     <div class="ctitle">Perhitungan</div>
     <div>R (repeats)   = ${data.repeats}</div>
     <div>Contoh size   = ${r0.size} byte</div>
-    <div>enc_ms        = (1/R) ┬╖ ╬úß╡ó encß╡ó(ms) = <code>${r0.enc_ms.toFixed(3)} ms</code></div>
-    <div>dec_ms        = (1/R) ┬╖ ╬úß╡ó decß╡ó(ms) = <code>${r0.dec_ms.toFixed(3)} ms</code></div>
-    <div>size_MB       = ${r0.size} / (1024┬╖1024) = ${(r0.size / (1024*1024)).toExponential(2)} MB</div>
+    <div>enc_ms        = (1/R) · Σᵢ encᵢ(ms) = <code>${r0.enc_ms.toFixed(3)} ms</code></div>
+    <div>dec_ms        = (1/R) · Σᵢ decᵢ(ms) = <code>${r0.dec_ms.toFixed(3)} ms</code></div>
+    <div>size_MB       = ${r0.size} / (1024·1024) = ${(r0.size / (1024*1024)).toExponential(2)} MB</div>
     <div>throughput    = size_MB / (enc_ms / 1000) = <code>${r0.throughput_mbs.toFixed(2)} MB/s</code></div>
-    <div>Kriteria      = enc_ms < 50 ms ΓåÆ <code>${r0.enc_ms < 50 ? 'LULUS' : 'GAGAL'}</code></div>
+    <div>Kriteria      = enc_ms < 50 ms → <code>${r0.enc_ms < 50 ? 'LULUS' : 'GAGAL'}</code></div>
   `;
   trace.style.display = 'block';
   document.getElementById('resPerf').classList.add('visible');
 }
 
-/* ΓöÇΓöÇ RENDER THROUGHPUT TABLE ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
+/* ── RENDER THROUGHPUT TABLE ──────────────────────── */
 function renderThroughputTable(data) {
   const rows = data.results || [];
   if (!rows.length) return;
@@ -507,7 +507,7 @@ function renderThroughputTable(data) {
       ? `<span class="pass-pill ok">${ICONS.check}</span>`
       : `<span class="pass-pill fail">${ICONS.cross}</span>`;
     html += `<tr>
-      <td>${r.size_kb ?? 'ΓÇö'}</td>
+      <td>${r.size_kb ?? '—'}</td>
       <td>${(r.time_ms ?? 0).toFixed(3)}</td>
       <td>${(r.throughput_mbs ?? 0).toFixed(2)}</td>
       <td>${pill}</td>
@@ -522,16 +522,16 @@ function renderThroughputTable(data) {
     <div class="ctitle">Perhitungan</div>
     <div>R (repeats)    = ${data.repeats}</div>
     <div>Contoh size    = ${r0.size_kb} KB</div>
-    <div>mean_time_s    = (1/R) ┬╖ ╬úß╡ó tß╡ó(s) = <code>${(r0.time_ms / 1000).toExponential(2)} s</code></div>
+    <div>mean_time_s    = (1/R) · Σᵢ tᵢ(s) = <code>${(r0.time_ms / 1000).toExponential(2)} s</code></div>
     <div>size_MB        = ${r0.size_kb} / 1024 = ${(r0.size_kb / 1024).toFixed(4)} MB</div>
     <div>throughput     = size_MB / mean_time_s = <code>${r0.throughput_mbs.toFixed(2)} MB/s</code></div>
-    <div>Kriteria       = throughput > 0.1 MB/s ΓåÆ <code>${r0.throughput_mbs > 0.1 ? 'LULUS' : 'GAGAL'}</code></div>
+    <div>Kriteria       = throughput > 0.1 MB/s → <code>${r0.throughput_mbs > 0.1 ? 'LULUS' : 'GAGAL'}</code></div>
   `;
   trace.style.display = 'block';
   document.getElementById('resThr').classList.add('visible');
 }
 
-/* ΓöÇΓöÇ INIT ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
+/* ── INIT ─────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', () => {
   loadKeyPreview();
   renderChat();
