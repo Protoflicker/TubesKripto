@@ -159,6 +159,17 @@ function clearChat() {
   chatHistory.length = 0;
   renderChat();
   clearActivityLog();
+  clearResultSummary();
+}
+
+function clearResultSummary() {
+  const box = document.getElementById('resultSummary');
+  if (!box) return;
+  box.classList.remove('failed');
+  box.classList.add('placeholder');
+  document.getElementById('rsTitle').textContent = 'Belum ada pesan terkirim';
+  document.getElementById('rsBody').innerHTML =
+    `<div class="rs-placeholder">Ringkasan pesan diterima &amp; verifikasi akan muncul di sini setelah Anda menekan <strong>Kirim</strong> dari salah satu chat.</div>`;
 }
 
 /* ── BUILD MESSAGE PAYLOAD ───────────────────────── */
@@ -189,6 +200,7 @@ async function sendMessage(from, text, attachment) {
   };
 
   clearActivityLog();
+  resetResultSummary();
   setSendButtonsDisabled(true);
 
   try {
@@ -223,6 +235,7 @@ async function sendMessage(from, text, attachment) {
         error: data.result.error || null
       });
       renderChat();
+      renderResultSummary(data.result, payloadText);
       setSendButtonsDisabled(false);
     }, delay + 200);
 
@@ -280,6 +293,75 @@ function submitAttach(ev) {
   // reset form
   document.getElementById('attachForm').reset();
   sendMessage('doctor', note || '', a);
+}
+
+/* ── RESULT SUMMARY (Pesan Diterima & Terverifikasi) ── */
+function resetResultSummary() {
+  const box = document.getElementById('resultSummary');
+  if (!box) return;
+  box.classList.remove('failed');
+  box.classList.add('placeholder');
+  document.getElementById('rsTitle').textContent = 'Memproses pesan...';
+  document.getElementById('rsBody').innerHTML =
+    `<div class="rs-placeholder">Menjalankan pipeline SHA-3-256 + AES-256-GCM, mohon tunggu...</div>`;
+}
+
+function renderResultSummary(result, originalPlaintext) {
+  const box   = document.getElementById('resultSummary');
+  const title = document.getElementById('rsTitle');
+  const body  = document.getElementById('rsBody');
+  if (!box) return;
+
+  box.classList.remove('placeholder');
+
+  if (result.is_valid) {
+    box.classList.remove('failed');
+    title.textContent = 'Pesan Diterima & Terverifikasi';
+
+    const digest = result.digest || '—';
+    const iv     = result.iv || '—';
+    const tag    = result.auth_tag || '—';
+    const ms     = (result.processing_time_ms != null) ? result.processing_time_ms.toFixed(1) : '—';
+    const pkt    = result.packet_size || 0;
+    const plain  = result.message || originalPlaintext || '';
+
+    body.innerHTML = `
+      <div class="rs-plaintext">${escapeHTML(plain)}</div>
+      <div class="rs-grid">
+        <div class="rs-field"><div class="rs-k">SHA-3-256 Digest</div><div class="rs-v">${digest}</div></div>
+        <div class="rs-field"><div class="rs-k">IV (96-bit)</div><div class="rs-v">${iv}</div></div>
+        <div class="rs-field"><div class="rs-k">Auth Tag (128-bit)</div><div class="rs-v">${tag}</div></div>
+        <div class="rs-field"><div class="rs-k">Waktu Proses</div><div class="rs-v">${ms} ms · ${pkt} byte</div></div>
+      </div>
+      <div class="rs-badges">
+        <span class="rs-badge">${ICONS.check} Auth Tag</span>
+        <span class="rs-badge">${ICONS.check} SHA-3-256</span>
+        <span class="rs-badge">${ICONS.check} Integritas</span>
+      </div>
+    `;
+  } else {
+    box.classList.add('failed');
+    title.textContent = 'Pesan Ditolak — Verifikasi Gagal';
+
+    const reason = FAILURE_REASON[result.error] || 'verifikasi gagal';
+    const macOk    = result.error !== 'mac_failed';
+    const hashOk   = result.error !== 'hash_mismatch';
+
+    body.innerHTML = `
+      <div class="rs-plaintext">${ICONS.warn} ${escapeHTML(reason)} — pesan tidak diteruskan ke penerima.</div>
+      <div class="rs-grid">
+        <div class="rs-field"><div class="rs-k">SHA-3-256 Digest (asli)</div><div class="rs-v">${result.digest || '—'}</div></div>
+        <div class="rs-field"><div class="rs-k">IV (96-bit)</div><div class="rs-v">${result.iv || '—'}</div></div>
+        <div class="rs-field"><div class="rs-k">Auth Tag (128-bit)</div><div class="rs-v">${result.auth_tag || '—'}</div></div>
+        <div class="rs-field"><div class="rs-k">Penyebab</div><div class="rs-v">${escapeHTML(result.error || 'unknown')}</div></div>
+      </div>
+      <div class="rs-badges">
+        <span class="rs-badge ${macOk ? '' : 'bad'}">${macOk ? ICONS.check : ICONS.cross} Auth Tag</span>
+        <span class="rs-badge ${hashOk ? '' : 'bad'}">${hashOk ? ICONS.check : ICONS.cross} SHA-3-256</span>
+        <span class="rs-badge bad">${ICONS.cross} Integritas</span>
+      </div>
+    `;
+  }
 }
 
 /* ── ACTIVITY LOG ─────────────────────────────────── */

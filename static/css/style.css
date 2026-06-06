@@ -868,6 +868,113 @@ input[type=range] { flex: 1; accent-color: var(--danger); height: 4px; cursor: p
   .form-row { grid-template-columns: 1fr; }
 }
 
+/* ── GRID PLACEMENT BARIS BAWAH ────────────────────
+ * Chats (col 1-2) + Sidebar (col 3) di baris 1.
+ * Sidebar span 2 baris dengan align-self:start supaya tingginya
+ * tidak ikut mempengaruhi tinggi baris 1 — activity-log di baris 2
+ * tetap nempel langsung di bawah chat panel. */
+.demo-grid > .demo-sidebar {
+  grid-column: 3;
+  grid-row: 1 / span 2;
+  align-self: start;
+}
+.demo-grid > .activity-log {
+  grid-column: 1 / 3;
+  grid-row: 2;
+  margin: 0;
+}
+@media (max-width: 1100px) {
+  .demo-grid > .demo-sidebar { grid-column: 1 / -1; grid-row: auto; }
+  .demo-grid > .activity-log { grid-column: 1 / -1; grid-row: auto; }
+}
+
+.result-summary {
+  background: var(--card);
+  border: 2px solid var(--success);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: border-color .25s ease, background .25s ease;
+}
+.result-summary.placeholder {
+  border-color: var(--border);
+  background: var(--card);
+}
+.result-summary.failed {
+  border-color: var(--danger);
+  background: var(--danger-bg);
+}
+.result-summary .rs-header {
+  display: flex; align-items: center; gap: 10px;
+  color: var(--success);
+  border-bottom: 1px solid var(--success);
+  padding-bottom: 8px;
+}
+.result-summary.placeholder .rs-header { color: var(--text-muted); border-bottom-color: var(--border); }
+.result-summary.failed .rs-header { color: var(--danger); border-bottom-color: var(--danger); }
+.result-summary .rs-header svg { width: 22px; height: 22px; }
+.result-summary .rs-header h3 {
+  margin: 0; font-size: .95rem; font-weight: 700;
+}
+
+.result-summary .rs-placeholder {
+  font-size: .82rem; color: var(--text-subtle); line-height: 1.55;
+}
+
+.rs-plaintext {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .78rem;
+  background: #f6fbf8;
+  border: 1px solid #d6ecdd;
+  border-radius: 8px;
+  padding: 8px 10px;
+  word-break: break-word;
+  color: #1a4d2e;
+}
+.result-summary.failed .rs-plaintext {
+  background: #fff5f4;
+  border-color: #f3c6c2;
+  color: var(--danger);
+}
+
+.rs-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+}
+.rs-field {
+  background: #f9fafb;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+.rs-field .rs-k {
+  font-size: .68rem; font-weight: 700; letter-spacing: .04em;
+  color: var(--text-muted); text-transform: uppercase;
+}
+.rs-field .rs-v {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .72rem;
+  color: var(--text);
+  word-break: break-all;
+  margin-top: 2px;
+}
+
+.rs-badges {
+  display: flex; gap: 8px; flex-wrap: wrap;
+}
+.rs-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 12px; border-radius: 999px;
+  font-size: .76rem; font-weight: 600;
+  background: var(--success-bg); color: var(--success);
+  border: 1px solid var(--success);
+}
+.rs-badge.bad {
+  background: var(--danger-bg); color: var(--danger); border-color: var(--danger);
+}
+
 /* ── REDUCED MOTION ───────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
