@@ -1,0 +1,11 @@
+# Jangan ikut sertakan file yang tidak dibutuhkan saat runtime di Vercel
+tests/
+Assets/
+demo.py
+demo_progress2.py
+test_sha3_script.py
+README.md
+__pycache__/
+*.pyc
+.venv/
+venv/

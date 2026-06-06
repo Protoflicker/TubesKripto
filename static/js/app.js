@@ -544,12 +544,13 @@ function renderCollision(data) {
 function renderPerfTable(data) {
   const rows = data.results || [];
   if (!rows.length) return;
+  const encThr = data.enc_threshold_ms ?? 50;
   let html = '<table class="data-table"><thead><tr><th>Ukuran (char)</th><th>Enc (ms)</th><th>Dec (ms)</th><th>Throughput (MB/s)</th><th>Status</th></tr></thead><tbody>';
   rows.forEach(r => {
-    const ok = (r.enc_ms ?? 0) < 50;
+    const ok = (r.pass_enc != null) ? r.pass_enc : ((r.enc_ms ?? 0) < encThr);
     const pill = ok
-      ? `<span class="pass-pill ok"><span class="with-icon">${ICONS.check} &lt; 50 ms</span></span>`
-      : `<span class="pass-pill fail"><span class="with-icon">${ICONS.cross} &gt; 50 ms</span></span>`;
+      ? `<span class="pass-pill ok"><span class="with-icon">${ICONS.check} &lt; ${encThr} ms</span></span>`
+      : `<span class="pass-pill fail"><span class="with-icon">${ICONS.cross} &gt; ${encThr} ms</span></span>`;
     html += `<tr>
       <td>${r.size ?? '—'}</td>
       <td>${(r.enc_ms ?? 0).toFixed(3)}</td>
@@ -572,7 +573,7 @@ function renderPerfTable(data) {
     <div>dec_ms        = (1/R) · Σᵢ decᵢ(ms) = <code>${r0.dec_ms.toFixed(3)} ms</code></div>
     <div>size_MB       = ${r0.size} / (1024·1024) = ${(r0.size / (1024*1024)).toExponential(2)} MB</div>
     <div>throughput    = size_MB / (enc_ms / 1000) = <code>${r0.throughput_mbs.toFixed(2)} MB/s</code></div>
-    <div>Kriteria      = enc_ms < 50 ms → <code>${r0.enc_ms < 50 ? 'LULUS' : 'GAGAL'}</code></div>
+    <div>Kriteria      = enc_ms < ${encThr} ms → <code>${(r0.pass_enc != null ? r0.pass_enc : r0.enc_ms < encThr) ? 'LULUS' : 'GAGAL'}</code></div>
   `;
   trace.style.display = 'block';
   document.getElementById('resPerf').classList.add('visible');
@@ -582,9 +583,10 @@ function renderPerfTable(data) {
 function renderThroughputTable(data) {
   const rows = data.results || [];
   if (!rows.length) return;
+  const minThr = data.min_throughput_mbs ?? 0.1;
   let html = '<table class="data-table"><thead><tr><th>Ukuran (KB)</th><th>Waktu (ms)</th><th>Throughput (MB/s)</th><th>Status</th></tr></thead><tbody>';
   rows.forEach(r => {
-    const ok = (r.throughput_mbs ?? 0) > 0.1;
+    const ok = (r.pass != null) ? r.pass : ((r.throughput_mbs ?? 0) > minThr);
     const pill = ok
       ? `<span class="pass-pill ok">${ICONS.check}</span>`
       : `<span class="pass-pill fail">${ICONS.cross}</span>`;
@@ -607,7 +609,7 @@ function renderThroughputTable(data) {
     <div>mean_time_s    = (1/R) · Σᵢ tᵢ(s) = <code>${(r0.time_ms / 1000).toExponential(2)} s</code></div>
     <div>size_MB        = ${r0.size_kb} / 1024 = ${(r0.size_kb / 1024).toFixed(4)} MB</div>
     <div>throughput     = size_MB / mean_time_s = <code>${r0.throughput_mbs.toFixed(2)} MB/s</code></div>
-    <div>Kriteria       = throughput > 0.1 MB/s → <code>${r0.throughput_mbs > 0.1 ? 'LULUS' : 'GAGAL'}</code></div>
+    <div>Kriteria       = throughput > ${minThr} MB/s → <code>${(r0.pass != null ? r0.pass : r0.throughput_mbs > minThr) ? 'LULUS' : 'GAGAL'}</code></div>
   `;
   trace.style.display = 'block';
   document.getElementById('resThr').classList.add('visible');

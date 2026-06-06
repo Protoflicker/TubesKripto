@@ -336,7 +336,7 @@
             <code>3. dec_ms = (1/R) · Σ decᵢ</code>
             <code>4. size_MB = size / (1024·1024)</code>
             <code>5. throughput = size_MB / (enc_ms / 1000)</code>
-            <code>6. PASS ⇔ enc_ms &lt; 5 ms</code>
+            <code>6. PASS ⇔ enc_ms &lt; ambang waktu (lihat hasil)</code>
             <div class="fnote">Mengukur kecepatan enkripsi/dekripsi AES-256-GCM untuk berbagai ukuran pesan.</div>
           </div>
           <button class="btn-test" id="btnPerf" onclick="runTest('performance')">
@@ -375,12 +375,12 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
               Rumus Perhitungan
             </div>
-            <code>Untuk size ∈ {1, 10, 100, 1024} KB:</code>
+            <code>Untuk size ∈ {1, 10, 50, 100} KB:</code>
             <code>1. Ulangi R kali, ukur tᵢ (detik)</code>
             <code>2. mean_t = (1/R) · Σ tᵢ</code>
             <code>3. size_MB = size_KB / 1024</code>
             <code>4. throughput = size_MB / mean_t  [MB/s]</code>
-            <code>5. PASS ⇔ throughput &gt; 50 MB/s</code>
+            <code>5. PASS ⇔ throughput &gt; ambang minimum (lihat hasil)</code>
             <div class="fnote">Mengukur seberapa cepat SHA-3-256 dapat memroses payload besar.</div>
           </div>
           <div class="test-input-row">

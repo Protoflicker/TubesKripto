@@ -1,2 +1,3 @@
-pycryptodome>=3.20.0
+# Implementasi kriptografi 100% pure Python (lihat crypto/raw_aes.py & crypto/raw_sha3.py)
+# sehingga TIDAK ada dependensi library kriptografi eksternal. Hanya butuh Flask.
 flask>=3.0.0

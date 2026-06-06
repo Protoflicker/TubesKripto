@@ -20,6 +20,42 @@ from crypto.raw_aes import (
 app = Flask(__name__)
 SERVER_KEY = generate_key()
 
+# ─────────────────────────────────────────────────────────────
+#  KONFIGURASI AMBANG & BEBAN UJI (sadar lingkungan)
+# ─────────────────────────────────────────────────────────────
+# Implementasi kriptografi ini 100% pure Python. Di PC lokal cukup cepat,
+# tetapi pada serverless Vercel ada batas waktu eksekusi fungsi (default ~10 dtk).
+#
+# AMBANG LULUS (kriteria) DIBUAT SAMA di semua lingkungan — tidak dilonggarkan di
+# Vercel — sesuai permintaan: enkripsi/dekripsi < 50 ms dan throughput hash > 0.1 MB/s.
+#
+# Yang berbeda di Vercel HANYA BEBAN UJI (jumlah iterasi / pasangan / repeats), bukan
+# kriteria lulus. Tujuannya semata-mata agar setiap endpoint SELESAI sebelum batas waktu
+# fungsi — sebab uji beban penuh (mis. 10.000–50.000 hash pure-Python) akan TIMEOUT dan
+# tidak mengembalikan hasil sama sekali (lebih buruk daripada sekadar "gagal"). Nilai
+# throughput & waktu per-operasi tidak dipengaruhi oleh jumlah repeats, jadi kriteria
+# tetap diuji secara adil. Vercel selalu menyetel env var VERCEL=1 saat runtime.
+ON_VERCEL = bool(os.environ.get('VERCEL') or os.environ.get('VERCEL_ENV'))
+
+# Ambang lulus — IDENTIK di lokal maupun Vercel
+ENC_THRESHOLD_MS = 50.0
+DEC_THRESHOLD_MS = 50.0
+HASH_MIN_MBS     = 0.1
+# Ukuran data uji — IDENTIK di kedua lingkungan (nilai throughput/waktu sebanding)
+PERF_SIZES    = [50, 100, 500, 1000, 5000]
+HASH_SIZES_KB = [1, 10, 50, 100]
+
+if ON_VERCEL:
+    # HANYA beban (iterasi/repeats) yang dikecilkan, demi menghindari timeout fungsi
+    PERF_REPEATS_DEF, PERF_REPEATS_MAX = 8, 12
+    HASH_REPEATS_DEF, HASH_REPEATS_MAX = 3, 5
+    COLLISION_DEF, COLLISION_MIN, COLLISION_MAX = 1500, 500, 3000
+else:
+    # Beban penuh untuk PC lokal (perilaku lama dipertahankan persis)
+    PERF_REPEATS_DEF, PERF_REPEATS_MAX = 20, 50
+    HASH_REPEATS_DEF, HASH_REPEATS_MAX = 10, 30
+    COLLISION_DEF, COLLISION_MIN, COLLISION_MAX = 10000, 100, 50000
+
 
 def _enc_fixed_iv(key: bytes, pt_bytes: bytes, iv_fixed: bytes) -> bytes:
     """Enkripsi AES-256-GCM dengan IV tetap — untuk avalanche test (pure raw)."""
@@ -278,7 +314,7 @@ def api_avalanche_aes():
 @app.route('/api/test/collision', methods=['POST'])
 def api_collision():
     data = request.json or {}
-    pairs = max(100, min(int(data.get('pairs', 10000)), 50000))
+    pairs = max(COLLISION_MIN, min(int(data.get('pairs', COLLISION_DEF)), COLLISION_MAX))
     seen = {}
     collisions = 0
     for i in range(pairs):
@@ -302,8 +338,8 @@ def api_collision():
 @app.route('/api/test/performance', methods=['POST'])
 def api_performance():
     data = request.json or {}
-    repeats = max(5, min(int(data.get('repeats', 20)), 50))
-    sizes = [50, 100, 500, 1000, 5000]
+    repeats = max(5, min(int(data.get('repeats', PERF_REPEATS_DEF)), PERF_REPEATS_MAX))
+    sizes = PERF_SIZES
     key = generate_key()
     rows = []
 
@@ -329,12 +365,15 @@ def api_performance():
             'enc_ms': round(enc_mean, 4), 'dec_ms': round(dec_mean, 4),
             'total_ms': round(enc_mean + dec_mean, 4),
             'throughput_mbs': round(throughput, 2),
-            'pass_enc': enc_mean < 50.0, 'pass_dec': dec_mean < 50.0,
+            'pass_enc': enc_mean < ENC_THRESHOLD_MS, 'pass_dec': dec_mean < DEC_THRESHOLD_MS,
             'overhead_bytes': 12 + 16
         })
 
     return jsonify({'results': rows, 'repeats': repeats,
-                    'key_size_bits': 256, 'mode': 'GCM-AEAD'})
+                    'key_size_bits': 256, 'mode': 'GCM-AEAD',
+                    'enc_threshold_ms': ENC_THRESHOLD_MS,
+                    'dec_threshold_ms': DEC_THRESHOLD_MS,
+                    'on_vercel': ON_VERCEL})
 
 
 # ─────────────────────────────────────────────────────────────
@@ -343,8 +382,8 @@ def api_performance():
 @app.route('/api/test/hash_throughput', methods=['POST'])
 def api_hash_throughput():
     data = request.json or {}
-    repeats = max(3, min(int(data.get('repeats', 10)), 30))
-    sizes_kb = [1, 10, 50, 100]  # Maks 100 KB untuk Pure Python
+    repeats = max(3, min(int(data.get('repeats', HASH_REPEATS_DEF)), HASH_REPEATS_MAX))
+    sizes_kb = HASH_SIZES_KB  # diperkecil di Vercel agar tidak melebihi batas waktu
     rows = []
     for size_kb in sizes_kb:
         msg = 'H' * (size_kb * 1024)
@@ -359,9 +398,11 @@ def api_hash_throughput():
             'size_kb': size_kb,
             'time_ms': round(mean_s * 1000, 4),
             'throughput_mbs': round(throughput, 1),
-            'pass': throughput > 0.1
+            'pass': throughput > HASH_MIN_MBS
         })
-    return jsonify({'results': rows, 'repeats': repeats})
+    return jsonify({'results': rows, 'repeats': repeats,
+                    'min_throughput_mbs': HASH_MIN_MBS,
+                    'on_vercel': ON_VERCEL})
 
 
 if __name__ == '__main__':
