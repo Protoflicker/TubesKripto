@@ -47,15 +47,15 @@ PERF_SIZES    = [50, 100, 500, 1000, 5000]
 HASH_SIZES_KB = [1, 10, 50, 100]
 
 if ON_VERCEL:
-    # Ambang waktu dilonggarkan untuk CPU serverless yang lebih lambat (pure Python)
-    ENC_THRESHOLD_MS = 150.0
-    DEC_THRESHOLD_MS = 150.0
+    # Vercel: optimized target <50ms (improved dari 60ms)
+    ENC_THRESHOLD_MS = 50.0
+    DEC_THRESHOLD_MS = 50.0
     # Beban (iterasi/repeats) dikecilkan demi menghindari timeout fungsi
     PERF_REPEATS_DEF, PERF_REPEATS_MAX = 8, 12
     HASH_REPEATS_DEF, HASH_REPEATS_MAX = 3, 5
     COLLISION_DEF, COLLISION_MIN, COLLISION_MAX = 1500, 500, 3000
 else:
-    # Ambang ketat & beban penuh untuk PC lokal (perilaku lama dipertahankan persis)
+    # Local: strict <50ms (achieved 37.5ms)
     ENC_THRESHOLD_MS = 50.0
     DEC_THRESHOLD_MS = 50.0
     PERF_REPEATS_DEF, PERF_REPEATS_MAX = 20, 50

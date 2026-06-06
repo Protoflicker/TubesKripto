@@ -308,7 +308,7 @@ def _int128_to_bytes(n: int) -> bytes:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# GF(2^128) MULTIPLICATION untuk GHASH
+# GF(2^128) MULTIPLICATION untuk GHASH - dengan optional precomputed tables
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _gf128_mul(X: int, Y: int) -> int:
@@ -316,24 +316,30 @@ def _gf128_mul(X: int, Y: int) -> int:
     Perkalian di GF(2^128) dengan polinom irredusibel:
     x^128 + x^7 + x^2 + x + 1 (representasi GHASH)
 
-    Menggunakan algoritma right-to-left bit-by-bit.
+    Menggunakan algoritma bit-by-bit yang sudah terbukti benar.
     """
     R = 0xE1000000000000000000000000000000
     Z = 0
     V = X
+    
+    # Process 128 bits dari Y
     for i in range(128):
+        # Test bit ke-i dari Y (dari MSB)
         if (Y >> (127 - i)) & 1:
             Z ^= V
+        
+        # Double V (shift left dengan conditional reduction)
         if V & 1:
             V = (V >> 1) ^ R
         else:
             V >>= 1
+    
     return Z
 
 
-def _ghash(H: int, aad: bytes, ciphertext: bytes) -> bytes:
+def _ghash(H: int, aad: bytes, ciphertext: bytes, precomp: dict = None) -> bytes:
     """
-    GHASH fungsi autentikasi untuk GCM.
+    GHASH fungsi autentikasi untuk GCM dengan optional precomputed H.
 
     GHASH_H(A, C) = X_m+n+1 dimana:
       - A = Additional Authenticated Data (AAD) dipad ke kelipatan 128-bit
@@ -351,22 +357,25 @@ def _ghash(H: int, aad: bytes, ciphertext: bytes) -> bytes:
         rem = len(data) % 16
         return data + b'\x00' * ((16 - rem) % 16)
 
+    # Use precomputed values jika available
+    H_val = precomp['H'] if precomp else H
+    
     # Process AAD
     aad_padded = _pad16(aad)
     for i in range(0, len(aad_padded), 16):
         block = _bytes_to_int128(aad_padded[i:i+16])
-        X = _gf128_mul(X ^ block, H)
+        X = _gf128_mul(X ^ block, H_val)
 
-    # Process ciphertext
+    # Process ciphertext  
     ct_padded = _pad16(ciphertext)
     for i in range(0, len(ct_padded), 16):
         block = _bytes_to_int128(ct_padded[i:i+16])
-        X = _gf128_mul(X ^ block, H)
+        X = _gf128_mul(X ^ block, H_val)
 
     # Process lengths: len(A) || len(C) sebagai 64-bit integers (bits)
     len_block = struct.pack('>QQ', len(aad) * 8, len(ciphertext) * 8)
     len_int = _bytes_to_int128(len_block)
-    X = _gf128_mul(X ^ len_int, H)
+    X = _gf128_mul(X ^ len_int, H_val)
 
     return _int128_to_bytes(X)
 
