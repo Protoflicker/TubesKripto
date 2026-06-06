@@ -21,7 +21,7 @@ import sys
 import os
 import time
 import secrets
-import hashlib
+# Tidak pakai hashlib — menggunakan raw_sha3 pure Python
 
 # Pastikan root proyek ada di path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

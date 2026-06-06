@@ -8,7 +8,7 @@ import random
 import secrets as secrets_mod
 
 from flask import Flask, request, jsonify, render_template
-from Crypto.Cipher import AES
+from crypto.raw_aes import encrypt_aes_gcm_raw as _aes_enc, decrypt_aes_gcm_raw as _aes_dec
 
 from crypto.sha3_utils    import compute_sha3_256, verify_sha3_256, compute_avalanche_effect
 from crypto.aes_gcm_utils import generate_key, encrypt_aes_gcm, decrypt_aes_gcm, build_packet, parse_packet
@@ -226,11 +226,21 @@ def api_avalanche_aes():
         key2[random.randint(0, 31)] ^= (1 << random.randint(0, 7))
 
         iv = os.urandom(12)
-        c1 = AES.new(key1, AES.MODE_GCM, nonce=iv)
-        _, tag1 = c1.encrypt_and_digest(plaintext.encode('utf-8'))
-
-        c2 = AES.new(bytes(key2), AES.MODE_GCM, nonce=iv)
-        _, tag2 = c2.encrypt_and_digest(plaintext.encode('utf-8'))
+        _, tag1_raw = _aes_enc.__wrapped__(key1, plaintext, iv=iv) if hasattr(_aes_enc, '__wrapped__') else (None, None)
+        # Gunakan raw_aes langsung untuk enkripsi dengan IV tetap
+        import struct
+        from crypto.raw_aes import _key_expansion_256, _aes_encrypt_block, _xor_bytes, _ghash, _bytes_to_int128, _int128_to_bytes, _aes_ctr_keystream
+        def _enc_fixed_iv(k, pt_bytes, iv_fixed):
+            rk = _key_expansion_256(k)
+            H = _bytes_to_int128(_aes_encrypt_block(b'\x00'*16, rk))
+            ks = _aes_ctr_keystream(k, iv_fixed, 2, len(pt_bytes)) if pt_bytes else b''
+            ct = _xor_bytes(pt_bytes, ks) if pt_bytes else b''
+            S  = _ghash(H, b'', ct)
+            j0 = _aes_ctr_keystream(k, iv_fixed, 1, 16)
+            return _xor_bytes(j0, S)
+        pt_b = plaintext.encode('utf-8')
+        tag1 = _enc_fixed_iv(key1, pt_b, iv)
+        tag2 = _enc_fixed_iv(bytes(key2), pt_b, iv)
 
         b1 = bin(int(tag1.hex(), 16))[2:].zfill(128)
         b2 = bin(int(tag2.hex(), 16))[2:].zfill(128)

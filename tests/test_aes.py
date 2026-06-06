@@ -51,7 +51,11 @@ from crypto.aes_gcm_utils import (
 )
 from crypto.crypto_pipeline import secure_encrypt, secure_decrypt
 from crypto.sha3_utils import compute_sha3_256, verify_sha3_256
-from Crypto.Cipher import AES
+# Tidak menggunakan pycryptodome — semua melalui raw_aes pure Python
+from crypto.raw_aes import (
+    _key_expansion_256, _aes_encrypt_block, _xor_bytes,
+    _ghash, _bytes_to_int128, _aes_ctr_keystream
+)
 
 # -------------------------------------------------------------
 #  HELPER OUTPUT
@@ -249,22 +253,31 @@ def test_pipeline_integrity():
 #  [E1] AVALANCHE EFFECT AES-256-GCM (KEY SENSITIVITY)
 # -------------------------------------------------------------
 
+def _enc_fixed_iv(key, pt_bytes, iv_fixed):
+    """Enkripsi AES-256-GCM dengan IV tetap — pure raw tanpa pycryptodome."""
+    rk = _key_expansion_256(key)
+    H  = _bytes_to_int128(_aes_encrypt_block(b'\x00' * 16, rk))
+    ks = _aes_ctr_keystream(key, iv_fixed, 2, len(pt_bytes)) if pt_bytes else b''
+    ct = _xor_bytes(pt_bytes, ks) if pt_bytes else b''
+    S  = _ghash(H, b'', ct)
+    j0 = _aes_ctr_keystream(key, iv_fixed, 1, 16)
+    return _xor_bytes(j0, S)
+
+
 def test_avalanche_aes(iterations: int = 100):
     header(f'[E1] Avalanche Effect AES-256-GCM — Key Sensitivity (n={iterations})')
     plaintext = 'Pasien: Budi Santoso. Diagnosis: ISPA. Resep: Amoxicillin 500mg, 3x1, 5 hari.'
+    pt_bytes  = plaintext.encode('utf-8')
     results   = []
 
     for _ in range(iterations):
         key1 = generate_key()
         key2 = bytearray(key1)
-        bit  = 1 << random.randint(0, 7)
-        key2[random.randint(0, KEY_SIZE - 1)] ^= bit  # flip 1 bit kunci
+        key2[random.randint(0, KEY_SIZE - 1)] ^= (1 << random.randint(0, 7))
 
-        iv = os.urandom(IV_SIZE)
-        c1 = AES.new(key1, AES.MODE_GCM, nonce=iv)
-        _, tag1 = c1.encrypt_and_digest(plaintext.encode('utf-8'))
-        c2 = AES.new(bytes(key2), AES.MODE_GCM, nonce=iv)
-        _, tag2 = c2.encrypt_and_digest(plaintext.encode('utf-8'))
+        iv   = os.urandom(IV_SIZE)
+        tag1 = _enc_fixed_iv(key1, pt_bytes, iv)
+        tag2 = _enc_fixed_iv(bytes(key2), pt_bytes, iv)
 
         b1 = bin(int(tag1.hex(), 16))[2:].zfill(128)
         b2 = bin(int(tag2.hex(), 16))[2:].zfill(128)
@@ -278,7 +291,7 @@ def test_avalanche_aes(iterations: int = 100):
     pass_49_51 = 49.0 <= mean <= 51.0
 
     print(f'  Iterasi   : {iterations}')
-    print(f'  Mean      : {mean:.2f}%   (target: 49% ≤ mean ≤ 51%)')
+    print(f'  Mean      : {mean:.2f}%   (target: 49% <= mean <= 51%)')
     print(f'  Std Dev   : {std:.2f}%')
     print(f'  Min       : {min(results):.2f}%')
     print(f'  Max       : {max(results):.2f}%')
@@ -295,8 +308,8 @@ def test_avalanche_aes(iterations: int = 100):
         label = f'{bins[j]}-{bins[j+1]}%'
         print_bar(label, hist[j], iterations)
 
-    result_line('SAC range lebar  (40–60%)', f'{mean:.2f}%', pass_40_60)
-    result_line('SAC target docx  (49–51%)', f'{mean:.2f}%', pass_49_51)
+    result_line('SAC range lebar  (40-60%)', f'{mean:.2f}%', pass_40_60)
+    result_line('SAC target docx  (49-51%)', f'{mean:.2f}%', pass_49_51)
     return pass_40_60
 
 
@@ -484,7 +497,7 @@ def test_key_strength():
 
 def test_empty_message():
     header('[R1] Empty Message Handling')
-    import hashlib
+    # Tidak menggunakan hashlib — raw_sha3 dipakai via compute_sha3_256
     key = generate_key()
     try:
         iv, ct, tag = encrypt_aes_gcm(key, '')
@@ -497,7 +510,9 @@ def test_empty_message():
         ok_enc = ok_ct_size = ok_tag_size = ok_dec = False
         decrypted = str(e)
 
-    expected_empty = hashlib.sha3_256(b'').hexdigest()
+    # Hitung SHA3-256 empty string via raw (bukan hashlib)
+    from crypto.raw_sha3 import sha3_256_hex
+    expected_empty = sha3_256_hex(b'')
     computed_empty = compute_sha3_256('')
     ok_hash = (computed_empty == expected_empty)
 

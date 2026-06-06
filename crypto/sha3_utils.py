@@ -1,24 +1,27 @@
 """
 crypto/sha3_utils.py
 Modul SHA-3-256 untuk sistem e-health secure messaging.
-Menggunakan hashlib (Python Standard Library).
+Implementasi MURNI tanpa library kriptografi — menggunakan raw_sha3.py
+yang mengimplementasikan Keccak-p[1600,24] sponge construction dari NIST FIPS 202.
 """
-import hashlib
-import hmac
+from .raw_sha3 import sha3_256_of_string, sha3_256_hex, constant_time_compare
 
 
 def compute_sha3_256(message: str) -> str:
+    """Hitung SHA-3-256 dari string. Return hexdigest 64 karakter."""
     if not isinstance(message, str):
         raise TypeError('message harus berupa string')
-    return hashlib.sha3_256(message.encode('utf-8')).hexdigest()
+    return sha3_256_of_string(message)
 
 
 def verify_sha3_256(message: str, expected_digest: str) -> bool:
+    """Verifikasi SHA-3-256 digest dengan constant-time comparison."""
     computed = compute_sha3_256(message)
-    return hmac.compare_digest(computed, expected_digest)
+    return constant_time_compare(computed, expected_digest)
 
 
 def compute_avalanche_effect(msg1: str, msg2: str) -> dict:
+    """Hitung avalanche effect antara dua pesan (% bit yang berbeda)."""
     d1 = compute_sha3_256(msg1)
     d2 = compute_sha3_256(msg2)
     bits1 = bin(int(d1, 16))[2:].zfill(256)
