@@ -302,7 +302,7 @@ def api_collision():
 @app.route('/api/test/performance', methods=['POST'])
 def api_performance():
     data = request.json or {}
-    repeats = max(10, min(int(data.get('repeats', 50)), 100))
+    repeats = max(5, min(int(data.get('repeats', 20)), 50))
     sizes = [50, 100, 500, 1000, 5000]
     key = generate_key()
     rows = []
@@ -343,8 +343,8 @@ def api_performance():
 @app.route('/api/test/hash_throughput', methods=['POST'])
 def api_hash_throughput():
     data = request.json or {}
-    repeats = max(10, min(int(data.get('repeats', 30)), 100))
-    sizes_kb = [1, 10, 100, 1024]
+    repeats = max(3, min(int(data.get('repeats', 10)), 30))
+    sizes_kb = [1, 10, 50, 100]  # Maks 100 KB untuk Pure Python
     rows = []
     for size_kb in sizes_kb:
         msg = 'H' * (size_kb * 1024)
