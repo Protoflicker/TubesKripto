@@ -362,12 +362,13 @@ def _aes_ctr_keystream(key_bytes: bytes, iv_12: bytes, start_counter: int, lengt
     iv0, iv1, iv2 = struct.unpack('>III', iv_12)
     ctr = start_counter & 0xFFFFFFFF
 
-    keystream = bytearray()
+    # Pre-allocate buffer untuk menghindari reallokasi O(n²) pada pesan besar
+    keystream = bytearray(blocks_needed * 16)
     enc = _encrypt_block_words
-    pack = struct.pack
-    for _ in range(blocks_needed):
+    pack_into = struct.pack_into
+    for idx in range(blocks_needed):
         o0, o1, o2, o3 = enc(iv0, iv1, iv2, ctr, rkw)
-        keystream += pack('>IIII', o0, o1, o2, o3)
+        pack_into('>IIII', keystream, idx * 16, o0, o1, o2, o3)
         ctr = (ctr + 1) & 0xFFFFFFFF
     return bytes(keystream[:length])
 
@@ -376,6 +377,22 @@ def _xor_bytes(a: bytes, b: bytes) -> bytes:
     """XOR dua bytes sequence (panjang sama) lewat satu operasi integer besar."""
     n = len(a) if len(a) <= len(b) else len(b)
     return (int.from_bytes(a[:n], 'big') ^ int.from_bytes(b[:n], 'big')).to_bytes(n, 'big')
+
+
+def _xor_bytes_chunked(a: bytes, b: bytes, chunk_size: int = 65536) -> bytes:
+    """XOR dua bytes sequence secara chunked untuk menghemat memori pada data besar."""
+    n = min(len(a), len(b))
+    if n <= chunk_size:
+        return (int.from_bytes(a[:n], 'big') ^ int.from_bytes(b[:n], 'big')).to_bytes(n, 'big')
+    result = bytearray(n)
+    for offset in range(0, n, chunk_size):
+        end = min(offset + chunk_size, n)
+        sz = end - offset
+        chunk_a = a[offset:end]
+        chunk_b = b[offset:end]
+        xored = (int.from_bytes(chunk_a, 'big') ^ int.from_bytes(chunk_b, 'big')).to_bytes(sz, 'big')
+        result[offset:end] = xored
+    return bytes(result)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -488,12 +505,11 @@ def _ghash(H: int, aad: bytes, ciphertext: bytes, precomp: dict = None) -> bytes
     X_i = (X_{i-1} XOR A_i) * H    untuk i = 1..m
     X_{m+j} = (X_{m+j-1} XOR C_j) * H  untuk j = 1..n
     X_{m+n+1} = (X_{m+n} XOR (len(A)||len(C))) * H
+
+    Optimasi: streaming tanpa membuat salinan padded dari seluruh ciphertext.
+    Blok terakhir yang tidak penuh dipad di tempat (in-place pad).
     """
     X = 0  # X_0 = 0
-
-    def _pad16(data: bytes) -> bytes:
-        rem = len(data) % 16
-        return data + b'\x00' * ((16 - rem) % 16)
 
     # Use precomputed values jika available
     H_val = precomp['H'] if precomp else H
@@ -501,20 +517,29 @@ def _ghash(H: int, aad: bytes, ciphertext: bytes, precomp: dict = None) -> bytes
     # Bangun tabel nibble untuk H SEKALI, lalu pakai untuk semua blok (byte-exact)
     T = precomp['T'] if (precomp and 'T' in precomp) else _build_ghash_table(H_val)
     frombytes = int.from_bytes
+    mul = _gf128_mul_table
 
-    # Process AAD
-    aad_padded = _pad16(aad)
-    for i in range(0, len(aad_padded), 16):
-        X = _gf128_mul_table(X ^ frombytes(aad_padded[i:i+16], 'big'), T)
+    # Process AAD — streaming (tanpa meng-copy seluruh AAD+padding)
+    aad_len = len(aad)
+    aad_full = aad_len - (aad_len % 16)
+    for i in range(0, aad_full, 16):
+        X = mul(X ^ frombytes(aad[i:i+16], 'big'), T)
+    if aad_len % 16:
+        last_block = aad[aad_full:] + b'\x00' * (16 - aad_len % 16)
+        X = mul(X ^ frombytes(last_block, 'big'), T)
 
-    # Process ciphertext
-    ct_padded = _pad16(ciphertext)
-    for i in range(0, len(ct_padded), 16):
-        X = _gf128_mul_table(X ^ frombytes(ct_padded[i:i+16], 'big'), T)
+    # Process ciphertext — streaming (tanpa meng-copy seluruh CT+padding)
+    ct_len = len(ciphertext)
+    ct_full = ct_len - (ct_len % 16)
+    for i in range(0, ct_full, 16):
+        X = mul(X ^ frombytes(ciphertext[i:i+16], 'big'), T)
+    if ct_len % 16:
+        last_block = ciphertext[ct_full:] + b'\x00' * (16 - ct_len % 16)
+        X = mul(X ^ frombytes(last_block, 'big'), T)
 
     # Process lengths: len(A) || len(C) sebagai 64-bit integers (bits)
-    len_int = (len(aad) * 8 << 64) | (len(ciphertext) * 8)
-    X = _gf128_mul_table(X ^ len_int, T)
+    len_int = (aad_len * 8 << 64) | (ct_len * 8)
+    X = mul(X ^ len_int, T)
 
     return _int128_to_bytes(X)
 
@@ -568,7 +593,7 @@ def encrypt_aes_gcm_raw(key: bytes, plaintext: str,
     # 2. GCTR encrypt: counter dimulai dari 2 (J0 counter = 1, digunakan untuk tag)
     if len(pt_bytes) > 0:
         keystream = _aes_ctr_keystream(key, iv, start_counter=2, length=len(pt_bytes), round_keys=round_keys)
-        ciphertext = _xor_bytes(pt_bytes, keystream)
+        ciphertext = _xor_bytes_chunked(pt_bytes, keystream)
     else:
         ciphertext = b''
 
@@ -632,7 +657,7 @@ def decrypt_aes_gcm_raw(key: bytes, iv: bytes,
     # 4. Decrypt (GCTR dengan counter=2)
     if len(ciphertext) > 0:
         keystream = _aes_ctr_keystream(key, iv, start_counter=2, length=len(ciphertext), round_keys=round_keys)
-        pt_bytes = _xor_bytes(ciphertext, keystream)
+        pt_bytes = _xor_bytes_chunked(ciphertext, keystream)
     else:
         pt_bytes = b''
 

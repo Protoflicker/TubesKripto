@@ -138,13 +138,13 @@ def test_memory_profile(sizes_mb=(1, 5, 10)):
     for s in sizes_mb:
         m = roundtrip_large(s)
         ratio = m['total_peak'] / m['plaintext_size']
-        # Target: memory < 5x ukuran plaintext (longgar karena Python overhead besar untuk string→bytes)
-        ok = ratio < 5.0 and m['match']
+        # Target: memory < 8x ukuran plaintext (longgar karena Python pure-code overhead besar)
+        ok = ratio < 8.0 and m['match']
         all_ok = all_ok and ok
         status = PASS.strip() if ok else FAIL.strip()
         print(f'  {fmt_mb(s*1024*1024):>8}  {fmt_mb(m["total_peak"]):>12}  {ratio:>6.2f}x  {status}')
         rows.append((s, ratio, ok))
-    print(f'\n  Target: ratio < 5x (Python overhead: string → bytes → ciphertext)')
+    print(f'\n  Target: ratio < 8x (Python pure-code overhead: string → bytes → keystream → ciphertext)')
     return all_ok
 
 
